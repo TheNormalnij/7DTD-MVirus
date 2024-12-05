@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9E1B8EDB-D954-4CBB-9D93-2A3981AD383D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MVirus</RootNamespace>
+    <AssemblyName>MVirus</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\0_TFP_Harmony\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="LogLibrary">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\LogLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="NGUI">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\NGUI.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="src\API.cs" />
+    <Compile Include="src\Client\ContentLoaderHttp.cs" />
+    <Compile Include="src\Client\Hooks\ServerLoadingProgressHook.cs" />
+    <Compile Include="src\Client\RemoteContentManager.cs" />
+    <Compile Include="src\Client\RemoteHttpInfo.cs" />
+    <Compile Include="src\Server\Hooks\ClientAuthHook.cs" />
+    <Compile Include="src\Server\ServerModManager.cs" />
+    <Compile Include="src\Shared\Crc32.cs" />
+    <Compile Include="src\Client\Hooks\ServersideModDirectoryPatch.cs" />
+    <Compile Include="src\Client\RemoteMod.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Server\ContentScanner.cs" />
+    <Compile Include="src\Server\ContentWebServer.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusHello.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusHelloResponse.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusWebResources.cs" />
+    <Compile Include="src\Shared\ServerFileInfo.cs" />
+    <Compile Include="src\Shared\Version.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ModInfo.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>
+rmdir "$(ProjectDir)Mods\TN_MVirus" /s /q
+mkdir "$(ProjectDir)Mods\TN_MVirus"
+
+copy "$(ProjectDir)$(OutDir)MVirus.dll" "$(ProjectDir)Mods\TN_MVirus\MVirus.dll"
+copy "$(ProjectDir)$(OutDir)ModInfo.xml" "$(ProjectDir)Mods\TN_MVirus\ModInfo.xml"
+</PostBuildEvent>
+  </PropertyGroup>
+</Project>

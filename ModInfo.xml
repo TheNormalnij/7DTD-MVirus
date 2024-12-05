@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="MVirus"/>
+	<DisplayName value="MVirus" />
+	<Description value="Mod manager. Server-side assets loader"/>
+	<Author value="TheNormalnij"/>
+	<Version value="0.0.1"/>
+	<Website value="https://thenormalnij.de"/>
+	<SkipWithAntiCheat value="false" />
+</xml>
