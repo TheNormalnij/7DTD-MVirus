@@ -74,6 +74,8 @@
     <Compile Include="src\Client\RemoteContentManager.cs" />
     <Compile Include="src\Client\RemoteHttpInfo.cs" />
     <Compile Include="src\Server\Hooks\ClientAuthHook.cs" />
+    <Compile Include="src\Server\MVirusConfig.cs" />
+    <Compile Include="src\Server\MVirusConfigXml.cs" />
     <Compile Include="src\Server\ServerModManager.cs" />
     <Compile Include="src\Shared\Crc32.cs" />
     <Compile Include="src\Client\Hooks\ServersideModDirectoryPatch.cs" />
@@ -91,6 +93,9 @@
     <None Include="ModInfo.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="config.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -105,6 +110,7 @@ mkdir "$(ProjectDir)Mods\TN_MVirus"
 
 copy "$(ProjectDir)$(OutDir)MVirus.dll" "$(ProjectDir)Mods\TN_MVirus\MVirus.dll"
 copy "$(ProjectDir)$(OutDir)ModInfo.xml" "$(ProjectDir)Mods\TN_MVirus\ModInfo.xml"
+copy "$(ProjectDir)$(OutDir)config.xml" "$(ProjectDir)Mods\TN_MVirus\config.xml"
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

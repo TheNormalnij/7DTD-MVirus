@@ -10,7 +10,7 @@ namespace MVirus.Server.Hooks
         {
             if (GameManager.IsDedicatedServer)
             {
-                _cInfo.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusHello>().Setup(RemoteFilesSource.LOCAL_HTTP, ServerModManager.Port));
+                _cInfo.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusHello>().Setup(RemoteFilesSource.LOCAL_HTTP, MVirusConfig.FilesHttpPort));
             }
         }
     }

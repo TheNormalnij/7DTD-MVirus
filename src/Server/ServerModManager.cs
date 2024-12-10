@@ -9,11 +9,10 @@ namespace MVirus.Server
         public static void OnServerGameStarted() {
             try
             {
+                MVirusConfig.Load();
                 ContentScanner.PrepareContent();
 
-                var httpPort = GamePrefs.GetInt(EnumGamePrefs.ServerPort) + 1;
-                Port = (ushort)httpPort;
-                contentServer = new ContentWebServer(ContentScanner.cachePath, httpPort);
+                contentServer = new ContentWebServer(ContentScanner.cachePath, MVirusConfig.FilesHttpPort);
             }
             catch (Exception e)
             {
@@ -25,7 +24,5 @@ namespace MVirus.Server
         public static void OnServerGameStopped() { 
             contentServer?.Stop();
         }
-
-        public static ushort Port { get; private set; }
     }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<MVirusServerSettings>
+	<!-- Port for HTTP file server -->
+	<property name="MV_HttpPath" value="24000"/>
+
+</MVirusServerSettings>
