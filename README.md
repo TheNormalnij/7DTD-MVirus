@@ -1,17 +1,17 @@
 
 MVirus is an unoffisial modification for [7 Days to Die](https://7daystodie.com/). It allows loading custom assets from the server. The mod should be installed on both the client and the server to work.
 
-# Installing
+# Installation
 
 ## Client
 
-1. Downlaod the latest [release](https://github.com/TheNormalnij/7DTD-MVirus/releases).
-2. Unpack the archive into `7 Days to Die/Mods` forlder.
+1. Download the latest [release](https://github.com/TheNormalnij/7DTD-MVirus/releases).
+2. Unpack the archive into your `7 Days to Die/Mods` forlder.
 
 ## Server
 
-1. Downlaod the latest [release](https://github.com/TheNormalnij/7DTD-MVirus/releases).
-2. Unpack the archive into `7 Days to Die Dedicated Server/Mods` forlder.
+1. Download the latest [release](https://github.com/TheNormalnij/7DTD-MVirus/releases).
+2. Unpack the archive into your `7 Days to Die Dedicated Server/Mods` forlder.
 
 # Roadmap
 
