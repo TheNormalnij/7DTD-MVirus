@@ -15,7 +15,7 @@ namespace MVirus.Server
             {
                 switch (item.GetAttribute("name"))
                 {
-                    case "MV_HttpPath":
+                    case "HttpPort":
                         {
                             MVirusConfig.FilesHttpPort = ushort.Parse(item.GetAttribute("value"));
                             break;
