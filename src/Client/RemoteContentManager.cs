@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MVirus.Shared;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MVirus.Client
@@ -10,16 +11,17 @@ namespace MVirus.Client
         public static ContentLoaderHttp currentLoading;
         public static RemoteHttpInfo Remote { get; set; }
 
-        public static void RequestServerMods(List<ServerFileInfo> list)
+        public static void RequestServerMods(ServerModInfo[] remoteInfo)
         {
             Log.Out("[MVirus] Request server mods");
             currentLoading?.StopDownloading();
 
             UnloadServerMods();
 
-            ParseRemoteMods(list);
+            ParseRemoteMods(remoteInfo);
 
-            currentLoading = new ContentLoaderHttp(Remote, list, API.clientCachePath);
+            var filesToDownload = GetAllRemoteModsFiles(remoteInfo);
+            currentLoading = new ContentLoaderHttp(Remote, filesToDownload, API.clientCachePath);
             _ = Process();
         }
 
@@ -33,29 +35,26 @@ namespace MVirus.Client
         public static void UnloadServerMods()
         {
             foreach (var mod in remoteMods.Values)
-            {
                 mod.Unload();
-            }
+
             remoteMods.Clear();
         }
 
-        private static void ParseRemoteMods(List<ServerFileInfo> list)
+        private static void ParseRemoteMods(ServerModInfo[] list)
         {
-            var mods = new HashSet<string>();
-            foreach (var item in list)
-            {
-                var pos = item.Path.IndexOf('/');
-                if (pos != -1)
-                {
-                    var resname = item.Path.Substring(0, pos);
-                    mods.Add(resname);
-                }
-            }
+            foreach (var remoteMod in list)
+                remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod.Name));
+        }
 
-            foreach (var resname in mods)
+        private static List<ServerFileInfo> GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)
+        {
+            var list = new List<ServerFileInfo>();
+            foreach (var remoteMod in remoteInfo)
             {
-                remoteMods.Add(resname, new RemoteMod(resname));
+                foreach (var file in remoteMod.Files)
+                    list.Add(new ServerFileInfo(remoteMod.Name + "/" + file.Path, file.Size, file.Crc));
             }
+            return list;
         }
 
         public static void LoadResources()
@@ -68,5 +67,6 @@ namespace MVirus.Client
         {
             return remoteMods.ContainsKey(name);
         }
+
     }
 }

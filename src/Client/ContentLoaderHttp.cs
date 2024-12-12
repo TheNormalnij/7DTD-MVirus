@@ -34,8 +34,7 @@ namespace MVirus.Client
         {
             RemoteArrd = remote;
             outPath = targetPath;
-            filesToLoad = new List<ServerFileInfo>();
-            files.CopyTo(filesToLoad);
+            filesToLoad = files;
         }
 
         public void StopDownloading()
@@ -85,6 +84,10 @@ namespace MVirus.Client
                     var crc32 = Crc32.CalculateFileCrc32(targetPath);
                     if (!crc32.Equals(fileInfo.Crc))
                         filteredList.Add(fileInfo);
+                }
+                else
+                {
+                    filteredList.Add(fileInfo);
                 }
             }
 

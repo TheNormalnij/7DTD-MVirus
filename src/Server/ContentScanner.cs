@@ -1,4 +1,5 @@
 ﻿using DamienG.Security.Cryptography;
+using MVirus.Shared;
 using System.Collections.Generic;
 using System.IO;
 
@@ -6,7 +7,7 @@ namespace MVirus.Server
 {
     internal class ContentScanner
     {
-        public static readonly List<ServerFileInfo> webFiles = new List<ServerFileInfo>();
+        public static readonly List<ServerModInfo> loadedMods = new List<ServerModInfo>();
         public static string cachePath;
 
         public static void PrepareContent()
@@ -27,12 +28,18 @@ namespace MVirus.Server
                 if (!SdDirectory.Exists(modCachePath))
                     SdDirectory.CreateDirectory(modCachePath);
 
-                CacheDirectory(mod.Path + "/Resources", modCachePath + "/Resources");
-                CacheDirectory(mod.Path + "/UIAtlases", modCachePath + "/UIAtlases");
+                var files = new List<ServerFileInfo>();
+
+                var startCut = mod.Path.Length + 1;
+                CacheDirectory(files, startCut, mod.Path + "/Resources", modCachePath + "/Resources");
+                CacheDirectory(files, startCut, mod.Path + "/UIAtlases", modCachePath + "/UIAtlases");
+
+                var modInfo = new ServerModInfo(mod.Name, files.ToArray());
+                loadedMods.Add(modInfo);
             }
         }
 
-        private static void CacheDirectory(string path, string targetPath)
+        private static void CacheDirectory(List<ServerFileInfo> outList, int startCut, string path, string targetPath)
         {
             if (!SdDirectory.Exists(path))
                 return;
@@ -44,7 +51,7 @@ namespace MVirus.Server
 
             foreach (var dir in SdDirectory.GetDirectories(path))
             {
-                CacheDirectory(dir, CombineHttpPath(targetPath, Path.GetFileName(dir)));
+                CacheDirectory(outList, startCut, dir, CombineHttpPath(targetPath, Path.GetFileName(dir)));
             }
 
             foreach (var file in SdDirectory.GetFiles(path))
@@ -52,11 +59,11 @@ namespace MVirus.Server
                 var targetFilePath = CombineHttpPath(targetPath, Path.GetFileName(file));
                 SdFile.Copy(file, targetFilePath);
 
-                var relativePath = targetFilePath.Substring(cachePath.Length + 1);
+                var relativePath = file.Substring(startCut).Replace('\\', '/');
                 var size = new FileInfo(targetFilePath).Length;
                 var hash = Crc32.CalculateFileCrc32(targetFilePath);
 
-                webFiles.Add(new ServerFileInfo(relativePath, size, hash));
+                outList.Add(new ServerFileInfo(relativePath, size, hash));
             }
         }
 

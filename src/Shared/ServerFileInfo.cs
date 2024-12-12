@@ -3,9 +3,9 @@ namespace MVirus
 {
     public class ServerFileInfo
     {
-        public string Path { get; }
-        public long Size { get; }
-        public int Crc { get; }
+        public string Path { get; set; }
+        public long Size { get; set; }
+        public int Crc { get; set; }
 
         public ServerFileInfo(string path, long size, int crc)
         {

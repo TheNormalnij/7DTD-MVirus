@@ -24,7 +24,7 @@ namespace MVirus.Shared.NetPackets
 
         public override void ProcessPackage(World _world, GameManager _callbacks)
         {
-            Sender.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusWebResources>().Setup(ContentScanner.webFiles));
+            Sender.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusWebResources>().Setup(ContentScanner.loadedMods));
         }
 
         public override int GetLength()
