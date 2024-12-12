@@ -15,7 +15,6 @@ MVirus is an unoffisial modification for [7 Days to Die](https://7daystodie.com/
 
 # Roadmap
 
-- UIAtlases support - public release condition.
 - Mod managment commands
 - Add a new download transport via the game protocol
 
