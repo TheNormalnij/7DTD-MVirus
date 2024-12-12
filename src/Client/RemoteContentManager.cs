@@ -28,6 +28,7 @@ namespace MVirus.Client
         private static async Task Process()
         {
             await currentLoading.DownloadServerFilesAsync();
+            LoadResources();
             if (GameManager.Instance.worldCreated)
                 GameManager.Instance.DoSpawn();
         }
@@ -43,7 +44,7 @@ namespace MVirus.Client
         private static void ParseRemoteMods(ServerModInfo[] list)
         {
             foreach (var remoteMod in list)
-                remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod.Name));
+                remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod));
         }
 
         private static List<ServerFileInfo> GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)
