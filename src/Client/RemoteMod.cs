@@ -1,5 +1,7 @@
-﻿using MVirus.Shared;
+﻿using MusicUtils;
+using MVirus.Shared;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace MVirus.Client
@@ -14,28 +16,39 @@ namespace MVirus.Client
         Failed
     }
 
+    struct LoadedAtlasInfo
+    {
+        public UIAtlas atlas;
+        public ModManager.AtlasManagerEntry ame;
+    }
+
     class RemoteMod
     {
         public readonly string name;
         private readonly ServerFileInfo[] files;
 
-        private RemoteModLoadState State;
+        private readonly List<LoadedAtlasInfo> atlases;
+        private readonly List<string> atlasManagers;
+
+        public RemoteModLoadState State { get; private set; }
 
         public RemoteMod(ServerModInfo remoteMod)
         {
             State = RemoteModLoadState.Stopped;
             name = remoteMod.Name;
             files = remoteMod.Files;
+            atlases = new List<LoadedAtlasInfo>();
+            atlasManagers = new List<string>();
         }
 
         public void Load()
         {
-            Log.Out("[MVirus] Load resource: " + name);
+            Log.Out("[MVirus] Load server mode: " + name);
             State = RemoteModLoadState.Starting;
 
             try
             {
-                LoadAtlasses();
+                LoadAtlases();
             } catch (Exception ex)
             {
                 Log.Exception(ex);
@@ -48,11 +61,22 @@ namespace MVirus.Client
 
         public void Unload()
         {
-            Log.Out("[MVirus] Unload resource: " + name);
+            Log.Out("[MVirus] Unload server mod: " + name);
             State = RemoteModLoadState.Unloading;
+            try
+            {
+                UnloadAtlases();
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+                State = RemoteModLoadState.Failed;
+                return;
+            }
+            State = RemoteModLoadState.Stopped;
         }
 
-        private void LoadAtlasses()
+        private void LoadAtlases()
         {
             var atlases = new HashSetList<string>();
 
@@ -76,6 +100,8 @@ namespace MVirus.Client
                     Log.Out("[MVirus] Creating new atlas '" + dirName + "' for mod '" + name + "'");
                     ModManager.RegisterAtlasManager(MultiSourceAtlasManager.Create(ModManager.atlasesParentGo, dirName), _createdByMod: true, ModManager.defaultShader);
                     ame = ModManager.atlasManagers[dirName];
+
+                    atlasManagers.Add(dirName);
                 }
 
                 var enumerator = UIAtlasFromFolder.CreateUiAtlasFromFolder(Path.Combine(API.clientCachePath, name, "UIAtlases", dirName), ame.Shader, (UIAtlas _atlas) =>
@@ -83,10 +109,31 @@ namespace MVirus.Client
                     _atlas.transform.parent = ame.Manager.transform;
                     ame.Manager.AddAtlas(_atlas, true);
                     ame.OnNewAtlasLoaded?.Invoke(_atlas, true);
+
+                    this.atlases.Add(new LoadedAtlasInfo { ame = ame, atlas = _atlas });
                 });
 
                 while (enumerator.MoveNext()) { }
             }
+        }
+
+        private void UnloadAtlases()
+        {
+            foreach (var item in atlases)
+            {
+                var toRemove = item.ame.Manager.atlases.Find(baseAtlass => baseAtlass.Atlas == item.atlas);
+                item.ame.Manager.atlases.Remove(toRemove);
+            }
+
+            foreach (var item in atlases)
+                item.ame.Manager.recalcSpriteSources();
+
+            atlases.Clear();
+
+            foreach (var item in atlasManagers)
+                ModManager.atlasManagers.Remove(item);
+
+            atlasManagers.Clear();
         }
     }
 }
