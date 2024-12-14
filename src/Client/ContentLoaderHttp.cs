@@ -22,17 +22,18 @@ namespace MVirus.Client
         private readonly string outPath;
 
         public LoadingState State { get; private set; }
-        public RemoteHttpInfo RemoteArrd { get; private set; }
+        public RemoteHttpInfo RemoteAddr { get; private set; }
 
         public string CurrentFile { get; private set; }
         public long DownloadSize { get; private set; }
+        public long ContentSize { get; private set; }
 
         private HttpClient Client { get; set; }
         private Task currentTask;
 
         public ContentLoaderHttp(RemoteHttpInfo remote, List<ServerFileInfo> files, string targetPath)
         {
-            RemoteArrd = remote;
+            RemoteAddr = remote;
             outPath = targetPath;
             filesToLoad = files;
         }
@@ -56,7 +57,6 @@ namespace MVirus.Client
             foreach (var fileInfo in filesToLoad)
             {
                 await DownloadFileAsync(fileInfo.Path);
-                DownloadSize -= fileInfo.Size;
 
                 if (State == LoadingState.CANCELING)
                 {
@@ -96,28 +96,34 @@ namespace MVirus.Client
 
         private void CalculateDownloadSize()
         {
-            DownloadSize = 0;
+            ContentSize = 0;
             foreach (var fileInfo in filesToLoad)
             {
-                DownloadSize += fileInfo.Size;
+                ContentSize += fileInfo.Size;
             }
+
+            DownloadSize = ContentSize;
         }
 
         private async Task DownloadFileAsync(string name)
         {
             try
             {
-                Log.Out("[MVirus] Download file: " + RemoteArrd.Url + name);
+                Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
                 CurrentFile = name;
 
                 CreateFileDir(name);
 
                 Client = new HttpClient();
-                var stream = await Client.GetStreamAsync(RemoteArrd.Url + name);
+                var stream = await Client.GetStreamAsync(RemoteAddr.Url + name);
 
                 Stream fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
-                await stream.CopyToAsync(fileStream);
 
+                await StreamUtils.CopyStreamToAsyncWithProgress(stream, fileStream, CancellationToken.None,
+                    progress: count => { DownloadSize -= count; }
+                    );
+
+                fileStream.Close();
                 Log.Out("[MVirus] Download complecte: " + name);
             }
             catch (Exception ex)

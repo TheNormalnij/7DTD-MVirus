@@ -1,5 +1,4 @@
-﻿using MusicUtils;
-using MVirus.Shared;
+﻿using MVirus.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +15,7 @@ namespace MVirus.Client
         Failed
     }
 
-    struct LoadedAtlasInfo
+    internal struct LoadedAtlasInfo
     {
         public UIAtlas atlas;
         public ModManager.AtlasManagerEntry ame;

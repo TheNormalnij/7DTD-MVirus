@@ -1,25 +1,28 @@
 ﻿using HarmonyLib;
-using System;
-using System.Threading.Tasks;
+using System.Collections;
+using UnityEngine;
 
 namespace MVirus.Client.Hooks
 {
-    internal class ProgressHookHelpers
+    [HarmonyPatch(typeof(WorldStaticData), nameof(WorldStaticData.WaitForConfigsFromServer))]
+    internal class WorldStaticDataAllConfigsReceivedAndLoadedHook
     {
-        public static bool IsDownlaoding() {
-            var loader = RemoteContentManager.currentLoading;
-            if (loader == null)
-                return false;
+        static bool Prefix()
+        {
+            if (WorldStaticData.receivedConfigsHandlerCoroutine != null)
+                ThreadManager.StopCoroutine(WorldStaticData.receivedConfigsHandlerCoroutine);
 
-            if (loader.State == LoadingState.LOADING)
-                return true;
-
+            WorldStaticData.receivedConfigsHandlerCoroutine = ThreadManager.StartCoroutine(HandleCo());
             return false;
         }
 
-        public static async Task ProcessLoadingText()
+        private static IEnumerator HandleCo()
         {
-            XUiC_ProgressWindow.Open(LocalPlayerUI.primaryUI, null);
+            var nextHandler = WorldStaticData.handleReceivedConfigs();
+
+            // Call it once to prevent race condition
+            yield return nextHandler.MoveNext();
+
             XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Download server mods");
 
             while (true)
@@ -31,40 +34,15 @@ namespace MVirus.Client.Hooks
                 if (loader.State != LoadingState.LOADING)
                     break;
 
-                XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Downloading " + (loader.DownloadSize / 1024) + "Kb");
+                XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Downloading " + (loader.DownloadSize / 1024 / 1024) + "Mb");
 
-                await Task.Delay(500);
+                yield return new WaitForSeconds(0.5f);
             }
 
-            XUiC_SpawnSelectionWindow.Open(LocalPlayerUI.primaryUI, _chooseSpawnPosition: false, _enteringGame: true);
-        }
-    }
+            XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Loading configs...");
 
-    [HarmonyPatch(typeof(GameManager), nameof(GameManager.DoSpawn))]
-    internal class GameManagerDoSpawnHook
-    {
-        static bool Prefix()
-        {
-            var downloading = ProgressHookHelpers.IsDownlaoding();
-            if (!downloading)
-                return true;
-
-            Task.Run(ProgressHookHelpers.ProcessLoadingText);
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(GameManager), nameof(GameManager.RequestToSpawn))]
-    internal class GameManagerRequestToSpawnHook
-    {
-        static bool Prefix()
-        {
-            var downloading = ProgressHookHelpers.IsDownlaoding();
-            if (!downloading)
-                return true;
-
-            Task.Run(ProgressHookHelpers.ProcessLoadingText);
-            return false;
+            while (nextHandler.MoveNext())
+                yield return nextHandler.Current;
         }
     }
 }

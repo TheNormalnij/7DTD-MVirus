@@ -1,4 +1,5 @@
 ﻿using MVirus.Shared;
+using MVirus.Shared.NetPackets;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -45,6 +46,13 @@ namespace MVirus.Client
         {
             foreach (var remoteMod in list)
                 remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod));
+        }
+
+        public static void RequestContent(RemoteHttpInfo remoteHttpInfo)
+        {
+            RemoteContentManager.Remote = remoteHttpInfo;
+
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
         }
 
         private static List<ServerFileInfo> GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)

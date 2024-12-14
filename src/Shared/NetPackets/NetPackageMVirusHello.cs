@@ -68,9 +68,7 @@ namespace MVirus.Shared.NetPackets
             }
 
             var ip = connectionManager.LastGameServerInfo.GetValue(GameInfoString.IP);
-            RemoteContentManager.Remote = new RemoteHttpInfo(ip, localHttpPort);
-
-            connectionManager.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
+            RemoteContentManager.RequestContent(new RemoteHttpInfo(ip, localHttpPort));
         }
 
         public override int GetLength()
