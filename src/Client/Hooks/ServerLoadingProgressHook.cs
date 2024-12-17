@@ -25,6 +25,16 @@ namespace MVirus.Client.Hooks
 
             XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Download server mods");
 
+            XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, () =>
+            {
+                RemoteContentManager.currentLoading?.StopDownloading();
+                ConnectionManager.Instance.Disconnect();
+                RemoteContentManager.UnloadServerMods();
+                XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, null);
+            });
+
+            var cancelText = "\n\n[FFFFFF]" + Utils.GetCancellationMessage();
+
             while (true)
             {
                 var loader = RemoteContentManager.currentLoading;
@@ -34,9 +44,23 @@ namespace MVirus.Client.Hooks
                 if (loader.State != LoadingState.LOADING)
                     break;
 
-                XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Downloading " + (loader.DownloadSize / 1024 / 1024) + "Mb");
+                var text = "Downloading " + (loader.DownloadSize / 1024 / 1024) + "Mb";
+
+                XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, text + cancelText, false);
 
                 yield return new WaitForSeconds(0.5f);
+            }
+
+            XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, null);
+
+            if (!ConnectionManager.Instance.IsConnected)
+                yield break;
+
+            if (RemoteContentManager.currentLoading?.State == LoadingState.CANCELED)
+            {
+                ConnectionManager.Instance.Disconnect();
+                RemoteContentManager.UnloadServerMods();
+                yield break;
             }
 
             XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Loading configs...");

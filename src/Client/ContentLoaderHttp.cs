@@ -13,6 +13,7 @@ namespace MVirus.Client
         IDLE,
         LOADING,
         CANCELING,
+        CANCELED,
         COMPLECTED
     }
 
@@ -28,6 +29,7 @@ namespace MVirus.Client
         public long DownloadSize { get; private set; }
         public long ContentSize { get; private set; }
 
+        private CancellationTokenSource cancellationTokenSource;
         private HttpClient Client { get; set; }
         private Task currentTask;
 
@@ -44,7 +46,14 @@ namespace MVirus.Client
                 return;
 
             State = LoadingState.CANCELING;
+            cancellationTokenSource?.Cancel();
             Client?.CancelPendingRequests();
+            Client?.Dispose();
+        }
+
+        public void Reset()
+        {
+            State = LoadingState.IDLE;
         }
 
         public async Task DownloadServerFilesAsync()
@@ -60,7 +69,7 @@ namespace MVirus.Client
 
                 if (State == LoadingState.CANCELING)
                 {
-                    State = LoadingState.IDLE;
+                    State = LoadingState.CANCELED;
                     Log.Out("[MVirus] Downloading canceled");
                     return;
                 }
@@ -107,30 +116,36 @@ namespace MVirus.Client
 
         private async Task DownloadFileAsync(string name)
         {
+            Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
+            CurrentFile = name;
+
+            Client = new HttpClient();
+            cancellationTokenSource = new CancellationTokenSource();
+            Stream fileStream = null;
+            Stream netStream = null;
             try
             {
-                Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
-                CurrentFile = name;
-
                 CreateFileDir(name);
 
-                Client = new HttpClient();
-                var stream = await Client.GetStreamAsync(RemoteAddr.Url + name);
+                netStream = await Client.GetStreamAsync(RemoteAddr.Url + name);
 
-                Stream fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
+                fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 
-                await StreamUtils.CopyStreamToAsyncWithProgress(stream, fileStream, CancellationToken.None,
+                await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
                     progress: count => { DownloadSize -= count; }
                     );
 
-                fileStream.Close();
                 Log.Out("[MVirus] Download complecte: " + name);
             }
             catch (Exception ex)
             {
-                Log.Error("Can not download file " + name);
-                Log.Exception(ex);
+                Log.Error(ex.Message);
+                StopDownloading();
             }
+
+            cancellationTokenSource = null;
+            netStream?.Close();
+            fileStream?.Close();
         }
 
         private void CreateFileDir(string path)
