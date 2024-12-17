@@ -7,7 +7,10 @@ namespace MVirus.Client
 {
     internal class RemoteContentManager
     {
-        private static readonly Dictionary<string, RemoteMod> remoteMods = new Dictionary<string, RemoteMod>();
+        private static readonly SearchPathRemoteMods prefabsSearch = new SearchPathRemoteMods("Prefabs");
+        private static readonly SearchPathRemoteMods prefabsImposterSearch = new SearchPathRemoteMods("Prefabs");
+
+        public static readonly Dictionary<string, RemoteMod> remoteMods = new Dictionary<string, RemoteMod>();
 
         public static ContentLoaderHttp currentLoading;
         public static RemoteHttpInfo Remote { get; set; }
@@ -32,6 +35,9 @@ namespace MVirus.Client
             LoadResources();
             if (GameManager.Instance.worldCreated)
                 GameManager.Instance.DoSpawn();
+
+            RegisterPrefabPath();
+            prefabsSearch.PopulateCache();
         }
 
         public static void UnloadServerMods()
@@ -40,6 +46,9 @@ namespace MVirus.Client
                 mod.Unload();
 
             remoteMods.Clear();
+
+            UnregisterPrefabPath();
+            prefabsSearch.InvalidateCache();
         }
 
         private static void ParseRemoteMods(ServerModInfo[] list)
@@ -53,6 +62,20 @@ namespace MVirus.Client
             RemoteContentManager.Remote = remoteHttpInfo;
 
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
+        }
+
+        private static void RegisterPrefabPath()
+        {
+            prefabsSearch.SetOwner(PathAbstractions.PrefabsSearchPaths);
+            prefabsImposterSearch.SetOwner(PathAbstractions.PrefabImpostersSearchPaths);
+            PathAbstractions.PrefabsSearchPaths.paths.Add(prefabsSearch);
+            PathAbstractions.PrefabImpostersSearchPaths.paths.Add(prefabsImposterSearch);
+        }
+
+        private static void UnregisterPrefabPath()
+        {
+            PathAbstractions.PrefabsSearchPaths.paths.Remove(prefabsSearch);
+            PathAbstractions.PrefabImpostersSearchPaths.paths.Remove(prefabsImposterSearch);
         }
 
         private static List<ServerFileInfo> GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)

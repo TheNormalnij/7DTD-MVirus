@@ -33,6 +33,7 @@ namespace MVirus.Server
                 var startCut = mod.Path.Length + 1;
                 CacheDirectory(files, startCut, mod.Path + "/Resources", modCachePath + "/Resources");
                 CacheDirectory(files, startCut, mod.Path + "/UIAtlases", modCachePath + "/UIAtlases");
+                CacheDirectory(files, startCut, mod.Path + "/Prefabs", modCachePath + "/Prefabs");
 
                 var modInfo = new ServerModInfo(mod.Name, files.ToArray());
                 loadedMods.Add(modInfo);

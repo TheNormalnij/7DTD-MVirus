@@ -1,7 +1,6 @@
 ﻿using MVirus.Shared;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace MVirus.Client
 {
@@ -28,6 +27,14 @@ namespace MVirus.Client
 
         private readonly List<LoadedAtlasInfo> atlases;
         private readonly List<string> atlasManagers;
+
+        public string Path
+        {
+            get
+            {
+                return API.clientCachePath + "/" + name;
+            }
+        }
 
         public RemoteModLoadState State { get; private set; }
 
@@ -103,7 +110,7 @@ namespace MVirus.Client
                     atlasManagers.Add(dirName);
                 }
 
-                var enumerator = UIAtlasFromFolder.CreateUiAtlasFromFolder(Path.Combine(API.clientCachePath, name, "UIAtlases", dirName), ame.Shader, (UIAtlas _atlas) =>
+                var enumerator = UIAtlasFromFolder.CreateUiAtlasFromFolder(Path + "/UIAtlases/" + dirName, ame.Shader, (UIAtlas _atlas) =>
                 {
                     _atlas.transform.parent = ame.Manager.transform;
                     ame.Manager.AddAtlas(_atlas, true);
