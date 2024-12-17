@@ -157,6 +157,7 @@ namespace MVirus.Server
                     Stream input = new FileStream(filename, FileMode.Open);
 
                     //Adding permanent http response headers
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
                     context.Response.ContentType = "application/octet-stream";
                     context.Response.ContentLength64 = input.Length;
                     context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
@@ -168,8 +169,6 @@ namespace MVirus.Server
                         context.Response.OutputStream.Write(buffer, 0, nbytes);
                     input.Close();
                     context.Response.OutputStream.Flush();
-
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
                 }
                 catch (Exception ex)
                 {
