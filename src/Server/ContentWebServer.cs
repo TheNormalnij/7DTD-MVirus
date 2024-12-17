@@ -152,10 +152,20 @@ namespace MVirus.Server
 
             if (File.Exists(filename))
             {
+                Stream input;
+
                 try
                 {
-                    Stream input = new FileStream(filename, FileMode.Open);
+                    input = new FileStream(filename, FileMode.Open);
+                }
+                catch (Exception ex)
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    Log.Error(ex.Message);
+                    return;
+                }
 
+                try {
                     //Adding permanent http response headers
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                     context.Response.ContentType = "application/octet-stream";
@@ -172,7 +182,6 @@ namespace MVirus.Server
                 }
                 catch (Exception ex)
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     Log.Exception(ex);
                 }
 
