@@ -3,59 +3,11 @@ using System.Net.Sockets;
 using System.Net;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace MVirus.Server
 {
-
     public class ContentWebServer
     {
-        public static ContentWebServer Current;
-
-        /// <summary>
-        /// This method can be used externally to start a singleton instance of 
-        /// the Web Server and keep it running without tracking a reference.                
-        /// 
-        /// If a server instance is already running it's shut down.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="port"></param>        
-        /// <param name="requestHandler">
-        /// Optional parameter of an object that has a Process method that gets passed a context 
-        /// and returns true if the request is handled or false if default processing should occur
-        /// </param>
-        public static void StartHttpServerOnThread(string path, int port = 8080, object requestHandler = null)
-        {
-            var t = new Thread(StartHttpServerThread);
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start(new ServerStartParameters { Path = path, Port = port, RequestHandler = requestHandler });
-        }
-
-        /// <summary>
-        /// Call this method to stop the Singleton instance of the server.
-        /// </summary>
-        public static void StopHttpServerOnThread()
-        {
-            Current.Stop();
-            Current = null;
-        }
-
-
-        /// <summary>
-        /// Internal method that instantiates the server instance
-        /// </summary>
-        /// <param name="parms"></param>
-        private static void StartHttpServerThread(object parms)
-        {
-
-            if (Current != null)
-                StopHttpServerOnThread();
-
-            var httpParms = parms as ServerStartParameters;
-            Current = new ContentWebServer(httpParms.Path, httpParms.Port);
-            Current.RequestHandler = httpParms.RequestHandler;
-        }
-
         private Thread _serverThread;
         private string _rootDirectory;
         private HttpListener _listener;
@@ -66,50 +18,17 @@ namespace MVirus.Server
             get { return _port; }
         }
 
-
-        /// <summary>
-        /// Instance of an object whose Process() method is called on each request.
-        /// Return true if the reuqest is handled, fase if it's not.
-        /// </summary>
-        public object RequestHandler { get; set; }
-
-        /// <summary>
-        /// Construct server with given port.
-        /// </summary>
-        /// <param name="path">Directory path to serve.</param>
-        /// <param name="port">Port of the server.</param>
         public ContentWebServer(string path, int port = 8080)
         {
             Initialize(path, port);
         }
 
-        /// <summary>
-        /// Construct server with suitable port.
-        /// </summary>
-        /// <param name="path">Directory path to serve.</param>
-        public ContentWebServer(string path)
-        {
-            //get an empty port
-            TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
-
-            Initialize(path, port);
-        }
-
-        /// <summary>
-        /// Stop server and dispose all functions.
-        /// </summary>
         public void Stop()
         {
             _serverThread.Abort();
             _listener.Stop();
         }
 
-        /// <summary>
-        /// Internal Handler
-        /// </summary>
         private void Listen()
         {
             _listener = new HttpListener();
@@ -130,10 +49,6 @@ namespace MVirus.Server
             }
         }
 
-        /// <summary>
-        /// Process an individual request. Handles only static file based requests
-        /// </summary>
-        /// <param name="context"></param>
         private void Process(HttpListenerContext context)
         {
             string filename = context.Request.Url.AbsolutePath;
@@ -203,20 +118,9 @@ namespace MVirus.Server
         }
     }
 
-    /// <summary>
-    /// Parameters thatr are passed to the thread method
-    /// </summary>
     public class ServerStartParameters
     {
         public string Path { get; set; }
         public int Port { get; set; }
-
-        /// <summary>
-        ///  Any object that implements a Process method
-        ///  method should return true (request is handled) 
-        /// or false (to fall through and handle as files)
-        /// </summary>
-        public object RequestHandler { get; set; }
     }
-
 }
