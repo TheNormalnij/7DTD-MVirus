@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MVirus.Shared.NetPackets;
 using System.Collections;
 using UnityEngine;
 
@@ -9,6 +10,11 @@ namespace MVirus.Client.Hooks
     {
         static bool Prefix()
         {
+            // Skip if the server has no MVirus
+            var testPackage = NetPackageManager.GetPackage<NetPackageMVirusHello>().GetType();
+            if (!NetPackageManager.packageClassToPackageId.ContainsKey(testPackage))
+                return true;
+
             if (WorldStaticData.receivedConfigsHandlerCoroutine != null)
                 ThreadManager.StopCoroutine(WorldStaticData.receivedConfigsHandlerCoroutine);
 
@@ -23,7 +29,7 @@ namespace MVirus.Client.Hooks
             // Call it once to prevent race condition
             yield return nextHandler.MoveNext();
 
-            XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Download server mods");
+            XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Wait server mod list");
 
             XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, () =>
             {
@@ -33,14 +39,15 @@ namespace MVirus.Client.Hooks
                 XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, null);
             });
 
+            // Wait the progress
+            while (RemoteContentManager.currentLoading == null && ConnectionManager.Instance.IsConnected)
+                yield return new WaitForSeconds(0.5f);
+
             var cancelText = "\n\n[FFFFFF]" + Utils.GetCancellationMessage();
 
+            var loader = RemoteContentManager.currentLoading;
             while (true)
             {
-                var loader = RemoteContentManager.currentLoading;
-                if (loader == null)
-                    break;
-
                 if (loader.State != LoadingState.LOADING)
                     break;
 

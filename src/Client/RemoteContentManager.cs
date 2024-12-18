@@ -32,6 +32,13 @@ namespace MVirus.Client
         private static async Task Process()
         {
             await currentLoading.DownloadServerFilesAsync();
+            if (currentLoading.State != LoadingState.COMPLECTED)
+            {
+                Log.Warning("[MVirus] Server files are not downloaded. Disconnect");
+                ConnectionManager.Instance.Disconnect();
+                return;
+            }
+
             LoadResources();
             if (GameManager.Instance.worldCreated)
                 GameManager.Instance.DoSpawn();

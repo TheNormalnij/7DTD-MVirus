@@ -139,7 +139,7 @@ namespace MVirus.Client
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message);
+                Log.Error("[MVirus] " + ex.Message);
                 StopDownloading();
             }
 
