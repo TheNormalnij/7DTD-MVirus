@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MVirus.Shared.NetPackets;
+using System;
 using System.Xml.Linq;
 
 namespace MVirus.Server
@@ -18,6 +19,23 @@ namespace MVirus.Server
                     case "HttpPort":
                         {
                             MVirusConfig.FilesHttpPort = ushort.Parse(item.GetAttribute("value"));
+                            break;
+                        }
+
+                    case "FileTransferType":
+                        {
+                            var value = ushort.Parse(item.GetAttribute("value"));
+
+                            if (value > ((ushort)RemoteFilesSource.REMOTE_HTTP))
+                                throw new Exception("Invalid FileTransferType config");
+
+                            MVirusConfig.RemoteFilesSource = (RemoteFilesSource)value;
+                            break;
+                        }
+
+                    case "ExternalHTTPServerAddr":
+                        {
+                            MVirusConfig.RemoteHttpAddr = item.GetAttribute("value");
                             break;
                         }
                 }

@@ -10,6 +10,8 @@
         }
 
         public RemoteHttpInfo(string url) {
+            if (!url.EndsWith("/"))
+                url += "/";
             Url = url;
         }
     }

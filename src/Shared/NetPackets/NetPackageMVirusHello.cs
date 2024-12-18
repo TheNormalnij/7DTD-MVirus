@@ -1,4 +1,5 @@
 ﻿using MVirus.Client;
+using System;
 
 namespace MVirus.Shared.NetPackets
 {
@@ -22,11 +23,13 @@ namespace MVirus.Shared.NetPackets
         private uint MVirusMinimalBuild = Version.MINIMAL_CLIENT_VERSION;
         private RemoteFilesSource remoteFilesSource;
         private ushort localHttpPort;
+        private string remoteHttpServer;
 
-        public NetPackageMVirusHello Setup(RemoteFilesSource filesSource, ushort httpPort)
+        public NetPackageMVirusHello Setup(RemoteFilesSource filesSource, ushort httpPort, string _remoteHttpServer)
         {
             remoteFilesSource = filesSource;
             localHttpPort = httpPort;
+            remoteHttpServer = _remoteHttpServer;
             return this;
         }
 
@@ -35,8 +38,20 @@ namespace MVirus.Shared.NetPackets
             MVirusProtocolVersion = _reader.ReadUInt32();
             MVirusMinimalBuild = _reader.ReadUInt32();
             remoteFilesSource = (RemoteFilesSource)_reader.ReadByte();
-            if (remoteFilesSource == RemoteFilesSource.LOCAL_HTTP)
-                localHttpPort = _reader.ReadUInt16();
+
+            switch (remoteFilesSource)
+            {
+                case RemoteFilesSource.LOCAL_HTTP:
+                    localHttpPort = _reader.ReadUInt16();
+                    break;
+                case RemoteFilesSource.REMOTE_HTTP:
+                    remoteHttpServer = _reader.ReadString();
+                    break;
+                case RemoteFilesSource.GAME_CONNECTION:
+                    throw new NotImplementedException("GAME_CONNECTION is not implemented");
+                default:
+                    throw new Exception("Invalid remote file source");
+            }
         }
 
         public override void write(PooledBinaryWriter _writer)
@@ -45,7 +60,20 @@ namespace MVirus.Shared.NetPackets
             _writer.Write(MVirusProtocolVersion);
             _writer.Write(MVirusMinimalBuild);
             _writer.Write((byte)remoteFilesSource);
-            _writer.Write(localHttpPort);
+
+            switch (remoteFilesSource)
+            {
+                case RemoteFilesSource.LOCAL_HTTP:
+                    _writer.Write(localHttpPort);
+                    break;
+                case RemoteFilesSource.REMOTE_HTTP:
+                    _writer.Write(remoteHttpServer);
+                    break;
+                case RemoteFilesSource.GAME_CONNECTION:
+                    throw new NotImplementedException("GAME_CONNECTION is not implemented");
+                default:
+                    throw new Exception("Invalid remote file source");
+            }
         }
 
         // Client only
@@ -67,13 +95,34 @@ namespace MVirus.Shared.NetPackets
                 connectionManager.Disconnect();
             }
 
-            var ip = connectionManager.LastGameServerInfo.GetValue(GameInfoString.IP);
-            RemoteContentManager.RequestContent(new RemoteHttpInfo(ip, localHttpPort));
+            RemoteHttpInfo remoteHttp;
+
+            if (remoteFilesSource == RemoteFilesSource.LOCAL_HTTP)
+            {
+                var ip = connectionManager.LastGameServerInfo.GetValue(GameInfoString.IP);
+                remoteHttp = new RemoteHttpInfo(ip, localHttpPort);
+            }
+            else
+            {
+                remoteHttp = new RemoteHttpInfo(remoteHttpServer);
+            }
+
+            RemoteContentManager.RequestContent(remoteHttp);
         }
 
         public override int GetLength()
         {
-            return 4 + 4 + 1 + 2;
+            switch (remoteFilesSource)
+            {
+                case RemoteFilesSource.LOCAL_HTTP:
+                    return 4 + 4 + 1 + 2;
+                case RemoteFilesSource.REMOTE_HTTP:
+                    return 4 + 4 + 1 + remoteHttpServer.Length;
+                case RemoteFilesSource.GAME_CONNECTION:
+                    return 4 + 4 + 1;
+                default:
+                    return 0;
+            }
         }
     }
 }

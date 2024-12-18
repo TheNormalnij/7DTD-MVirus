@@ -8,10 +8,15 @@ namespace MVirus.Server.Hooks
     {
         static void Prefix(ref ClientInfo _cInfo)
         {
-            if (GameManager.IsDedicatedServer)
-            {
-                _cInfo.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusHello>().Setup(RemoteFilesSource.LOCAL_HTTP, MVirusConfig.FilesHttpPort));
-            }
+            if (!GameManager.IsDedicatedServer)
+                return;
+
+            _cInfo.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusHello>()
+                .Setup(
+                    MVirusConfig.RemoteFilesSource,
+                    MVirusConfig.FilesHttpPort,
+                    MVirusConfig.RemoteHttpAddr)
+                );
         }
     }
 }

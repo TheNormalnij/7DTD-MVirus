@@ -1,6 +1,15 @@
 <?xml version="1.0"?>
 <MVirusServerSettings>
-	<!-- Port for HTTP file server -->
+	<!-- Used file transfer protocol:
+		0 - use internal HTTP server
+		1 - use external HTTP server
+	-->
+	<property name="FileTransferType" value="0"/>
+
+	<!-- Addres to external HTTP file server or CDN if you are using it -->
+	<property name="ExternalHTTPServerAddr" value="https://example.com/optionalpath"/>
+
+	<!-- Port for internal HTTP file server -->
 	<property name="HttpPort" value="24000"/>
 
 </MVirusServerSettings>
