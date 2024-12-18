@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Net.Sockets;
 using System.Net;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MVirus.Server
 {
@@ -25,8 +25,8 @@ namespace MVirus.Server
 
         public void Stop()
         {
+            _listener?.Stop();
             _serverThread.Abort();
-            _listener.Stop();
         }
 
         private void Listen()
@@ -35,12 +35,17 @@ namespace MVirus.Server
             _listener.Prefixes.Add("http://*:" + _port.ToString() + "/");
             _listener.Start();
 
-            while (true)
+            Task.Run(ListenLoopAsync);
+        }
+
+        private async Task ListenLoopAsync()
+        {
+            while(true)
             {
                 try
                 {
-                    HttpListenerContext context = _listener.GetContext();
-                    Process(context);
+                    HttpListenerContext context = await _listener.GetContextAsync();
+                    _ = ProcessAsync(context);
                 }
                 catch (Exception ex)
                 {
@@ -49,7 +54,7 @@ namespace MVirus.Server
             }
         }
 
-        private void Process(HttpListenerContext context)
+        private async Task ProcessAsync(HttpListenerContext context)
         {
             string filename = context.Request.Url.AbsolutePath;
 
@@ -57,56 +62,55 @@ namespace MVirus.Server
 
             if (string.IsNullOrEmpty(filename))
             {
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                context.Response.OutputStream.Close();
+                SendError(context.Response, HttpStatusCode.NotFound);
                 return;
             }
 
-
             filename = Path.Combine(_rootDirectory, filename);
 
-            if (File.Exists(filename))
+            if (!File.Exists(filename))
             {
-                Stream input;
-
-                try
-                {
-                    input = new FileStream(filename, FileMode.Open);
-                }
-                catch (Exception ex)
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    Log.Error(ex.Message);
-                    return;
-                }
-
-                try {
-                    //Adding permanent http response headers
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                    context.Response.ContentType = "application/octet-stream";
-                    context.Response.ContentLength64 = input.Length;
-                    context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
-                    context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
-
-                    byte[] buffer = new byte[1024 * 32];
-                    int nbytes;
-                    while ((nbytes = input.Read(buffer, 0, buffer.Length)) > 0)
-                        context.Response.OutputStream.Write(buffer, 0, nbytes);
-                    input.Close();
-                    context.Response.OutputStream.Flush();
-                }
-                catch (Exception ex)
-                {
-                    Log.Exception(ex);
-                }
-
-            }
-            else
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                SendError(context.Response, HttpStatusCode.NotFound);
+                return;
             }
 
+            FileStream input;
+
+            try
+            {
+                input = File.OpenRead(filename);
+            }
+            catch (Exception ex)
+            {
+                SendError(context.Response, HttpStatusCode.InternalServerError);
+                Log.Error(ex.Message);
+                return;
+            }
+
+            try {
+                //Adding permanent http response headers
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                context.Response.ContentType = "application/octet-stream";
+                context.Response.ContentLength64 = input.Length;
+                context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+                context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
+
+                await input.CopyToAsync(context.Response.OutputStream);
+                await context.Response.OutputStream.FlushAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+            }
+
+            input.Close();
             context.Response.OutputStream.Close();
+        }
+
+        private void SendError(HttpListenerResponse response, HttpStatusCode code = HttpStatusCode.InternalServerError)
+        {
+            response.StatusCode = (int)code;
+            response.OutputStream.Close();
         }
 
         private void Initialize(string path, int port)
