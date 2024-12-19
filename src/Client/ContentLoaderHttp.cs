@@ -1,4 +1,5 @@
 ﻿using DamienG.Security.Cryptography;
+using MVirus.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,6 +61,13 @@ namespace MVirus.Client
         {
             State = LoadingState.LOADING;
 
+            if (!IsFileListSafe())
+            {
+                Log.Error("[MVirus] Unsafe file path. Abort");
+                State = LoadingState.CANCELED;
+                return;
+            }
+
             FilterLocalFiles();
             CalculateDownloadSize();
 
@@ -78,6 +86,11 @@ namespace MVirus.Client
             Log.Out("[MVirus] All download tasks complected");
 
             State = LoadingState.COMPLECTED;
+        }
+
+        private bool IsFileListSafe()
+        {
+            return !filesToLoad.Exists(item => !PathUtils.IsSafeRelativePath(item.Path));
         }
 
         private void FilterLocalFiles()
@@ -127,7 +140,8 @@ namespace MVirus.Client
             {
                 CreateFileDir(name);
 
-                netStream = await Client.GetStreamAsync(RemoteAddr.Url + name);
+                var urlPath = Uri.EscapeDataString(name);
+                netStream = await Client.GetStreamAsync(RemoteAddr.Url + urlPath);
 
                 fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 

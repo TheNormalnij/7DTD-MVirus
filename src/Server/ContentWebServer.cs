@@ -3,6 +3,7 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MVirus.Shared;
 
 namespace MVirus.Server
 {
@@ -56,13 +57,19 @@ namespace MVirus.Server
 
         private async Task ProcessAsync(HttpListenerContext context)
         {
-            string filename = context.Request.Url.AbsolutePath;
+            string filename = Uri.UnescapeDataString(context.Request.Url.AbsolutePath);
 
             filename = filename.Substring(1);
 
             if (string.IsNullOrEmpty(filename))
             {
                 SendError(context.Response, HttpStatusCode.NotFound);
+                return;
+            }
+
+            if (!PathUtils.IsSafeRelativePath(filename))
+            {
+                SendError(context.Response, HttpStatusCode.Forbidden);
                 return;
             }
 

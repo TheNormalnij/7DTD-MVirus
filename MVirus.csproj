@@ -90,6 +90,7 @@
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHello.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHelloResponse.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusWebResources.cs" />
+    <Compile Include="src\Shared\PathUtils.cs" />
     <Compile Include="src\Shared\ServerFileInfo.cs" />
     <Compile Include="src\Shared\ServerModInfo.cs" />
     <Compile Include="src\Shared\Version.cs" />
