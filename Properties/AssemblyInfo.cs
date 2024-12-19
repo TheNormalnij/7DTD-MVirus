@@ -5,8 +5,12 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("MVirus")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyDescription("An asset loader for 7 Days To Die")]
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug")]
+#else
+[assembly: AssemblyConfiguration("Release")]
+#endif
 [assembly: AssemblyCompany("TheNormalnij")]
 [assembly: AssemblyProduct("MVirus")]
 [assembly: AssemblyCopyright("Copyright ©  2024")]
@@ -18,8 +22,7 @@ using System.Runtime.InteropServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("9e1b8edb-d954-4cbb-9d93-2a3981ad383d")]
+[assembly: Guid("fcf4da61-08e5-4927-974c-5e582af84c41")]
 
 // Version information for an assembly consists of the following four values:
 //
