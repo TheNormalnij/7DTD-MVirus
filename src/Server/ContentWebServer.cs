@@ -13,6 +13,7 @@ namespace MVirus.Server
         private string _rootDirectory;
         private HttpListener _listener;
         private int _port;
+        private bool closing;
 
         public int Port
         {
@@ -26,12 +27,14 @@ namespace MVirus.Server
 
         public void Stop()
         {
-            _listener?.Stop();
+            closing = true;
             _serverThread.Abort();
+            _listener?.Stop();
         }
 
         private void Listen()
         {
+            closing = false;
             _listener = new HttpListener();
             _listener.Prefixes.Add("http://*:" + _port.ToString() + "/");
             _listener.Start();
@@ -41,7 +44,7 @@ namespace MVirus.Server
 
         private async Task ListenLoopAsync()
         {
-            while(true)
+            while(!closing)
             {
                 try
                 {
