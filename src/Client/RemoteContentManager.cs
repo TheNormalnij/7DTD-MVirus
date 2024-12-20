@@ -45,6 +45,7 @@ namespace MVirus.Client
 
             RegisterPrefabPath();
             prefabsSearch.PopulateCache();
+            prefabsImposterSearch.PopulateCache();
         }
 
         public static void UnloadServerMods()
@@ -56,6 +57,7 @@ namespace MVirus.Client
 
             UnregisterPrefabPath();
             prefabsSearch.InvalidateCache();
+            prefabsImposterSearch.InvalidateCache();
         }
 
         private static void ParseRemoteMods(ServerModInfo[] list)
