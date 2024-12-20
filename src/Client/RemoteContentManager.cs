@@ -29,6 +29,12 @@ namespace MVirus.Client
             _ = Process();
         }
 
+        public static void CancelLoadingProcess()
+        {
+            currentLoading?.StopDownloading();
+            currentLoading = null;
+        }
+
         private static async Task Process()
         {
             await currentLoading.DownloadServerFilesAsync();

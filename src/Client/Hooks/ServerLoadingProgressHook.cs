@@ -35,7 +35,7 @@ namespace MVirus.Client.Hooks
 
             XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, () =>
             {
-                RemoteContentManager.currentLoading?.StopDownloading();
+                RemoteContentManager.CancelLoadingProcess();
                 ConnectionManager.Instance.Disconnect();
                 RemoteContentManager.UnloadServerMods();
                 XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, null);
