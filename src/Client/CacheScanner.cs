@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MVirus.Client
@@ -15,12 +16,45 @@ namespace MVirus.Client
             if (files.Count == 0)
                 return new List<ServerFileInfo>();
 
-            return await FilterLocalFilesThisThreadAsync(files, cachePath, exists);
+            return await FilterLocalFilesInSeparateThread(files, cachePath, exists);
+        }
+
+        private static async Task<List<ServerFileInfo>> FilterLocalFilesInSeparateThread(List<ServerFileInfo> files, string cachePath, Action<ServerFileInfo> exists)
+        {
+            List<ServerFileInfo> result = null;
+            Exception resultException = null;
+
+            var th = new Thread(() => {
+                try
+                {
+                    var task = FilterLocalFilesThisThreadAsync(files, cachePath, exists);
+                    task.Wait();
+                    result = task.Result;
+                }
+                catch (Exception ex)
+                {
+                    resultException = ex;
+                }
+            });
+
+            th.Start();
+
+            for (; ; )
+            {
+                if (!th.IsAlive)
+                    break;
+
+                await Task.Delay(500);
+            }
+
+            if (resultException != null)
+                throw resultException;
+
+            return result;
         }
 
         private static async Task<List<ServerFileInfo>> FilterLocalFilesThisThreadAsync(List<ServerFileInfo> files, string cachePath, Action<ServerFileInfo> exists)
         {
-
             var tasksArray = files.ToArray();
             var index = -1;
 
@@ -38,7 +72,6 @@ namespace MVirus.Client
                 if (check == null)
                     return null;
 
-                Log.Warning(check.Path);
                 var path = Path.Combine(cachePath, check.Path);
                 return new CheckTaskInfo{ task = IsFileCached(path, check.Crc), data = check };
             }

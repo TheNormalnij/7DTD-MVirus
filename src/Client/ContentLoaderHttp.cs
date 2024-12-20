@@ -25,9 +25,10 @@ namespace MVirus.Client
 
         public LoadingState State { get; private set; }
         public RemoteHttpInfo RemoteAddr { get; private set; }
+        private long _downloadSize = 0;
 
         public string CurrentFile { get; private set; }
-        public long DownloadSize { get; private set; }
+        public long DownloadSize { get { return _downloadSize; } }
         public long ContentSize { get; private set; }
 
         private CancellationTokenSource cancellationTokenSource;
@@ -74,7 +75,7 @@ namespace MVirus.Client
             {
                 filesToLoad = await CacheScanner.FilterLocalFiles(filesToLoad, outPath, existsFile =>
                 {
-                    DownloadSize -= existsFile.Size;
+                    Interlocked.Add(ref _downloadSize, -existsFile.Size);
                 });
             }
             catch (Exception ex)
@@ -117,7 +118,7 @@ namespace MVirus.Client
                 ContentSize += fileInfo.Size;
             }
 
-            DownloadSize = ContentSize;
+            _downloadSize = ContentSize;
         }
 
         private async Task DownloadFileAsync(string name)
@@ -139,7 +140,7 @@ namespace MVirus.Client
                 fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 
                 await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
-                    progress: count => { DownloadSize -= count; }
+                    progress: count => { _downloadSize -= count; }
                     );
 
                 Log.Out("[MVirus] Download complecte: " + name);
