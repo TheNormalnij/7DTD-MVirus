@@ -29,7 +29,9 @@ namespace MVirus.Client.Hooks
             // Call it once to prevent race condition
             yield return nextHandler.MoveNext();
 
-            XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Wait server mod list");
+            var cancelText = "\n\n[FFFFFF]" + Utils.GetCancellationMessage();
+
+            XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Wait server mod list" + cancelText);
 
             XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, () =>
             {
@@ -43,9 +45,21 @@ namespace MVirus.Client.Hooks
             while (RemoteContentManager.currentLoading == null && ConnectionManager.Instance.IsConnected)
                 yield return new WaitForSeconds(0.5f);
 
-            var cancelText = "\n\n[FFFFFF]" + Utils.GetCancellationMessage();
 
             var loader = RemoteContentManager.currentLoading;
+
+            while (true)
+            {
+                if (loader.State != LoadingState.IDLE && loader.State != LoadingState.CACHE_SCAN)
+                    break;
+
+                var text = "Scan cache " + (loader.DownloadSize / 1024 / 1024) + "Mb";
+
+                XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, text + cancelText, false);
+
+                yield return new WaitForSeconds(0.5f);
+            }
+
             while (true)
             {
                 if (loader.State != LoadingState.LOADING)

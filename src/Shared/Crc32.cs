@@ -2,10 +2,11 @@
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. 
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
+using MVirus.src.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace DamienG.Security.Cryptography
 {
@@ -19,7 +20,7 @@ namespace DamienG.Security.Cryptography
     /// interface or remember that the result of one Compute call needs to be ~ (XOR) before
     /// being passed in as the seed for the next Compute call.
     /// </remarks>
-    public sealed class Crc32 : HashAlgorithm
+    public sealed class Crc32 : HashAlgorithmAsync
     {
         public const UInt32 DefaultPolynomial = 0xedb88320u;
         public const UInt32 DefaultSeed = 0xffffffffu;
@@ -170,6 +171,21 @@ namespace DamienG.Security.Cryptography
 
             var fs = File.Open(path, FileMode.Open);
             var hash = crc32.ComputeHash(fs);
+
+            fs.Close();
+
+            return hash[3] | (hash[2] << 8) | (hash[1] << 16) | (hash[0] << 24);
+        }
+
+        public static async Task<int> CalculateFileCrc32Async(string path)
+        {
+            var crc32 = new Crc32();
+
+            var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                                    bufferSize: 2 * 1024 * 1024, useAsync: true);
+
+
+            var hash = await crc32.ComputeHashAsync(fs);
 
             fs.Close();
 

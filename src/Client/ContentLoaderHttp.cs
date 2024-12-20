@@ -1,5 +1,4 @@
-﻿using DamienG.Security.Cryptography;
-using MVirus.Shared;
+﻿using MVirus.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +11,7 @@ namespace MVirus.Client
     enum LoadingState
     {
         IDLE,
+        CACHE_SCAN,
         LOADING,
         CANCELING,
         CANCELED,
@@ -59,7 +59,7 @@ namespace MVirus.Client
 
         public async Task DownloadServerFilesAsync()
         {
-            State = LoadingState.LOADING;
+            State = LoadingState.CACHE_SCAN;
 
             if (!IsFileListSafe())
             {
@@ -68,8 +68,24 @@ namespace MVirus.Client
                 return;
             }
 
-            FilterLocalFiles();
             CalculateDownloadSize();
+
+            try
+            {
+                filesToLoad = await CacheScanner.FilterLocalFiles(filesToLoad, outPath, existsFile =>
+                {
+                    DownloadSize -= existsFile.Size;
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+                Log.Error("[MVirus] Cannot handle cache. Abort");
+                State = LoadingState.CANCELED;
+                return;
+            }
+
+            State = LoadingState.LOADING;
 
             foreach (var fileInfo in filesToLoad)
             {
@@ -91,29 +107,6 @@ namespace MVirus.Client
         private bool IsFileListSafe()
         {
             return !filesToLoad.Exists(item => !PathUtils.IsSafeRelativePath(item.Path));
-        }
-
-        private void FilterLocalFiles()
-        {
-            var filteredList = new List<ServerFileInfo>();
-
-            foreach (var fileInfo in filesToLoad)
-            {
-                var targetPath = Path.Combine(outPath, fileInfo.Path);
-
-                if (File.Exists(targetPath))
-                {
-                    var crc32 = Crc32.CalculateFileCrc32(targetPath);
-                    if (!crc32.Equals(fileInfo.Crc))
-                        filteredList.Add(fileInfo);
-                }
-                else
-                {
-                    filteredList.Add(fileInfo);
-                }
-            }
-
-            filesToLoad = filteredList;
         }
 
         private void CalculateDownloadSize()
