@@ -40,6 +40,7 @@ namespace MVirus.Client
             RemoteAddr = remote;
             outPath = targetPath;
             filesToLoad = files;
+            Client = new HttpClient();
         }
 
         public void StopDownloading()
@@ -50,7 +51,6 @@ namespace MVirus.Client
             State = LoadingState.CANCELING;
             cancellationTokenSource?.Cancel();
             Client?.CancelPendingRequests();
-            Client?.Dispose();
         }
 
         public void Reset()
@@ -126,7 +126,6 @@ namespace MVirus.Client
             Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
             CurrentFile = name;
 
-            Client = new HttpClient();
             cancellationTokenSource = new CancellationTokenSource();
             Stream fileStream = null;
             Stream netStream = null;
