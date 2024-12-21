@@ -71,6 +71,7 @@
     <Compile Include="src\API.cs" />
     <Compile Include="src\Client\CacheScanner.cs" />
     <Compile Include="src\Client\ContentLoaderHttp.cs" />
+    <Compile Include="src\Client\DataSpeedCalculator.cs" />
     <Compile Include="src\Client\Hooks\ConnectHook.cs" />
     <Compile Include="src\Client\Hooks\DisconnectHook.cs" />
     <Compile Include="src\Client\Hooks\ServerLoadingProgressHook.cs" />

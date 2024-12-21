@@ -47,25 +47,34 @@ namespace MVirus.Client.Hooks
 
 
             var loader = RemoteContentManager.currentLoading;
+            var speedCalculator = new DataSpeedCalculator(loader.DownloadSize);
 
             while (true)
             {
                 if (loader.State != LoadingState.IDLE && loader.State != LoadingState.CACHE_SCAN)
                     break;
 
-                var text = "Scan cache " + (loader.DownloadSize / 1024 / 1024) + "Mb";
+                speedCalculator.Update(loader.DownloadSize);
+
+                var text = "Scan cache " + (loader.DownloadSize / 1024 / 1024) + "Mb"
+                    + "\n Speed: " + speedCalculator.GetUserFriendlyString();
 
                 XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, text + cancelText, false);
 
                 yield return new WaitForSeconds(0.5f);
             }
 
+            speedCalculator.Update(loader.DownloadSize);
+
             while (true)
             {
                 if (loader.State != LoadingState.LOADING)
                     break;
 
-                var text = "Downloading " + (loader.DownloadSize / 1024 / 1024) + "Mb";
+                speedCalculator.Update(loader.DownloadSize);
+
+                var text = "Downloading " + (loader.DownloadSize / 1024 / 1024) + "Mb"
+                    + "\n Speed: " + speedCalculator.GetUserFriendlyString();
 
                 XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, text + cancelText, false);
 
