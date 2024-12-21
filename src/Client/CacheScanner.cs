@@ -11,15 +11,17 @@ namespace MVirus.Client
     public class CacheScanner
     {
 
-        public async static Task<List<ServerFileInfo>> FilterLocalFiles(List<ServerFileInfo> files, string cachePath, Action<ServerFileInfo> exists)
+        public async static Task<List<ServerFileInfo>> FilterLocalFiles(List<ServerFileInfo> files,
+            string cachePath, CancellationToken cancellationToken, Action<ServerFileInfo> exists)
         {
             if (files.Count == 0)
                 return new List<ServerFileInfo>();
 
-            return await FilterLocalFilesInSeparateThread(files, cachePath, exists);
+            return await FilterLocalFilesInSeparateThread(files, cachePath, cancellationToken, exists);
         }
 
-        private static async Task<List<ServerFileInfo>> FilterLocalFilesInSeparateThread(List<ServerFileInfo> files, string cachePath, Action<ServerFileInfo> exists)
+        private static async Task<List<ServerFileInfo>> FilterLocalFilesInSeparateThread(List<ServerFileInfo> files,
+            string cachePath, CancellationToken cancellationToken, Action<ServerFileInfo> exists)
         {
             List<ServerFileInfo> result = null;
             Exception resultException = null;
@@ -27,7 +29,7 @@ namespace MVirus.Client
             var th = new Thread(() => {
                 try
                 {
-                    var task = FilterLocalFilesThisThreadAsync(files, cachePath, exists);
+                    var task = FilterLocalFilesThisThreadAsync(files, cachePath, cancellationToken, exists);
                     task.Wait();
                     result = task.Result;
                 }
@@ -53,7 +55,8 @@ namespace MVirus.Client
             return result;
         }
 
-        private static async Task<List<ServerFileInfo>> FilterLocalFilesThisThreadAsync(List<ServerFileInfo> files, string cachePath, Action<ServerFileInfo> exists)
+        private static async Task<List<ServerFileInfo>> FilterLocalFilesThisThreadAsync(List<ServerFileInfo> files,
+            string cachePath, CancellationToken cancellationToken, Action<ServerFileInfo> exists)
         {
             var tasksArray = files.ToArray();
             var index = -1;
@@ -89,6 +92,8 @@ namespace MVirus.Client
             var filteredList = new List<ServerFileInfo>();
             for (; ; )
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var finished = await Task.WhenAny(currentTasks.Select( item => item.task ));
 
                 var taskItem = currentTasks.Find(item => item.task == finished);

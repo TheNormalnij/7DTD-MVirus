@@ -41,16 +41,17 @@ namespace MVirus.Client
             outPath = targetPath;
             filesToLoad = files;
             Client = new HttpClient();
+            cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void StopDownloading()
         {
-            if (State != LoadingState.LOADING)
+            if (State > LoadingState.LOADING)
                 return;
 
             State = LoadingState.CANCELING;
-            cancellationTokenSource?.Cancel();
-            Client?.CancelPendingRequests();
+            cancellationTokenSource.Cancel();
+            Client.CancelPendingRequests();
         }
 
         public async Task DownloadServerFilesAsync()
@@ -68,10 +69,17 @@ namespace MVirus.Client
 
             try
             {
-                filesToLoad = await CacheScanner.FilterLocalFiles(filesToLoad, outPath, existsFile =>
+                filesToLoad = await CacheScanner.FilterLocalFiles(filesToLoad, outPath, cancellationTokenSource.Token, existsFile =>
                 {
                     Interlocked.Add(ref _downloadSize, -existsFile.Size);
                 });
+            }
+            catch (OperationCanceledException)
+            {
+                // Doesn't work. Why?
+                Log.Out("[MVirus] Canceled in CacheScanner.FilterLocalFiles");
+                State = LoadingState.CANCELED;
+                return;
             }
             catch (Exception ex)
             {
@@ -121,7 +129,6 @@ namespace MVirus.Client
             Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
             CurrentFile = name;
 
-            cancellationTokenSource = new CancellationTokenSource();
             Stream fileStream = null;
             Stream netStream = null;
             try
@@ -145,7 +152,6 @@ namespace MVirus.Client
                 StopDownloading();
             }
 
-            cancellationTokenSource = null;
             netStream?.Close();
             fileStream?.Close();
         }
