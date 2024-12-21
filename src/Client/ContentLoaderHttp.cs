@@ -53,11 +53,6 @@ namespace MVirus.Client
             Client?.CancelPendingRequests();
         }
 
-        public void Reset()
-        {
-            State = LoadingState.IDLE;
-        }
-
         public async Task DownloadServerFilesAsync()
         {
             State = LoadingState.CACHE_SCAN;

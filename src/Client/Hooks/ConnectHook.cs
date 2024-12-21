@@ -7,7 +7,7 @@ namespace MVirus.Client.Hooks
     {
         static void Prefix(ref GameServerInfo _gameServerInfo)
         {
-            RemoteContentManager.currentLoading?.Reset();
+            RemoteContentManager.CancelLoadingProcess();
         }
     }
 }
