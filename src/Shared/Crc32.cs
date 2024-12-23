@@ -169,7 +169,7 @@ namespace DamienG.Security.Cryptography
         {
             var crc32 = new Crc32();
 
-            var fs = File.Open(path, FileMode.Open);
+            var fs = File.OpenRead(path);
             var hash = crc32.ComputeHash(fs);
 
             fs.Close();

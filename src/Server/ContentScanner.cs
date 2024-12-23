@@ -1,7 +1,9 @@
 ﻿using DamienG.Security.Cryptography;
 using MVirus.Shared;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 namespace MVirus.Server
 {
@@ -58,14 +60,69 @@ namespace MVirus.Server
             foreach (var file in SdDirectory.GetFiles(path))
             {
                 var targetFilePath = CombineHttpPath(targetPath, Path.GetFileName(file));
-                SdFile.Copy(file, targetFilePath);
+                var outPath = CacheFile(file, targetFilePath);
 
                 var relativePath = file.Substring(startCut).Replace('\\', '/');
-                var size = new FileInfo(targetFilePath).Length;
-                var hash = Crc32.CalculateFileCrc32(targetFilePath);
+                var size = new FileInfo(outPath).Length;
+                var hash = Crc32.CalculateFileCrc32(file);
 
                 outList.Add(new ServerFileInfo(relativePath, size, hash));
             }
+        }
+
+        private static string CacheFile(string filePath, string targetFilePath)
+        {
+            if (IsFileShouldBeCompressed(filePath))
+            {
+                try
+                {
+                    var outPath = targetFilePath + ".gz";
+                    CompressFile(filePath, outPath);
+                    return outPath;
+                } catch
+                {
+                    SdFile.Copy(filePath, targetFilePath);
+                }
+            }
+            else
+            {
+                SdFile.Copy(filePath, targetFilePath);
+            }
+            return targetFilePath;
+        }
+
+        private static void CompressFile(string filePath, string targetFilePath)
+        {
+            FileStream sourceStream = null;
+            FileStream targetStream = null;
+            GZipStream gzipStream = null;
+            try
+            {
+                sourceStream = File.OpenRead(filePath);
+                targetStream = File.Create(targetFilePath);
+                gzipStream = new GZipStream(targetStream, CompressionMode.Compress);
+                sourceStream.CopyTo(gzipStream);
+            }
+            finally
+            {
+                gzipStream?.Dispose();
+                sourceStream?.Dispose();
+                targetStream?.Dispose();
+            }
+        }
+
+        private static bool IsFileShouldBeCompressed(string filePath)
+        {
+            if (!MVirusConfig.FileCompression)
+                return false;
+
+            if (filePath.EndsWith(".png"))
+                return false;
+
+            if (new FileInfo(filePath).Length < 200)
+                return false;
+
+            return true;
         }
 
         private static string CombineHttpPath(string dir1, string dir2)

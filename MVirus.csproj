@@ -78,6 +78,7 @@
     <Compile Include="src\Client\RemoteContentManager.cs" />
     <Compile Include="src\Client\RemoteHttpInfo.cs" />
     <Compile Include="src\Client\SearchPathRemoteMods.cs" />
+    <Compile Include="src\Client\StreamProgressWrapper.cs" />
     <Compile Include="src\Client\StreamUtils.cs" />
     <Compile Include="src\Server\Hooks\ClientAuthHook.cs" />
     <Compile Include="src\Server\MVirusConfig.cs" />
