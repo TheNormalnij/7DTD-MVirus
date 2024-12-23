@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -135,20 +137,32 @@ namespace MVirus.Client
             {
                 CreateFileDir(name);
 
-                var urlPath = Uri.EscapeDataString(name);
-                netStream = await Client.GetStreamAsync(RemoteAddr.Url + urlPath);
+                var urlPath = RemoteAddr.Url + Uri.EscapeDataString(name);
+
+                var request = new HttpRequestMessage(HttpMethod.Get, urlPath);
+
+                var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                netStream = await response.Content.ReadAsStreamAsync();
 
                 fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 
-                await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
-                    progress: count => { _downloadSize -= count; }
-                    );
+                if (response.Content.Headers.ContentEncoding.FirstOrDefault() == "gzip")
+                    await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
+                        progress: count => { _downloadSize -= count; }
+                        );
+                else
+                    await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
+                        progress: count => { _downloadSize -= count; }
+                        );
+                
 
                 Log.Out("[MVirus] Download complecte: " + name);
             }
             catch (Exception ex)
             {
-                Log.Error("[MVirus] " + ex.Message);
+                Log.Error("[MVirus] DownloadFileAsync error: " + ex.Message);
                 StopDownloading();
             }
 

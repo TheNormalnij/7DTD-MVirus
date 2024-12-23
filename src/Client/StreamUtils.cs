@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,15 +8,17 @@ namespace MVirus.Client
 {
     internal class StreamUtils
     {
-        public static async Task CopyStreamToAsyncWithProgress(Stream from, Stream destination, CancellationToken cancellationToken, int bufferSize = 81920, Action<int> progress = null)
+        public static async Task CopyStreamToAsyncWithProgress(Stream from, Stream destination, CancellationToken cancellationToken, Action<int> progress, int bufferSize = 81920)
         {
-            byte[] buffer = new byte[bufferSize];
-            int count;
-            while ((count = await from.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(continueOnCapturedContext: false)) != 0)
-            {
-                await destination.WriteAsync(buffer, 0, count, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
-                progress?.Invoke(count);
-            }
+            await new StreamProgressWrapper(from, progress).CopyToAsync(destination, bufferSize);
         }
+
+        public static async Task CopyGzipStreamToAsyncWithProgress(Stream from, Stream destination, CancellationToken cancellationToken, Action<int> progress, int bufferSize = 81920)
+        {;
+            var gzipStream = new GZipStream(new StreamProgressWrapper(from, progress), CompressionMode.Decompress);
+            await gzipStream.CopyToAsync(destination, bufferSize);
+            gzipStream.Dispose();
+        }
+
     }
 }
