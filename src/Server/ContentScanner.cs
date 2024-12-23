@@ -113,6 +113,9 @@ namespace MVirus.Server
 
         private static bool IsFileShouldBeCompressed(string filePath)
         {
+            if (!MVirusConfig.FileCompression)
+                return false;
+
             if (filePath.EndsWith(".png"))
                 return false;
 

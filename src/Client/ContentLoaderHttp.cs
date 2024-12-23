@@ -148,15 +148,14 @@ namespace MVirus.Client
 
                 fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 
+                Action<int> progressCounter = count => { _downloadSize -= count; };
+
                 if (response.Content.Headers.ContentEncoding.FirstOrDefault() == "gzip")
                     await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
-                        progress: count => { _downloadSize -= count; }
-                        );
+                                                                        progressCounter);
                 else
                     await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
-                        progress: count => { _downloadSize -= count; }
-                        );
-                
+                                                                    progressCounter);
 
                 Log.Out("[MVirus] Download complecte: " + name);
             }

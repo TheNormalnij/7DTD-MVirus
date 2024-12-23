@@ -38,6 +38,11 @@ namespace MVirus.Server
                             MVirusConfig.RemoteHttpAddr = item.GetAttribute("value");
                             break;
                         }
+                    case "ModCompression":
+                        {
+                            MVirusConfig.FileCompression = item.GetAttribute("value") == "true";
+                            break;
+                        }
                 }
             }
         }
