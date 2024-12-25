@@ -1,15 +1,12 @@
-﻿using MVirus.Shared;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MVirus.Client.Transports
 {
-    public class ContentLoaderNet : ILoadingTransport
+    public class ContentLoadingTransportNet : ILoadingTransport
     {
-        private readonly NetFileTransferManager downloadManager = new NetFileTransferManager();
-
         public void OnDownloadCanceled()
         {
             
@@ -24,9 +21,7 @@ namespace MVirus.Client.Transports
             Stream netStream = null;
             try
             {
-                PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(name)));
-
-                netStream = await downloadManager.CreateFileStream(name);
+                netStream = await API.incomingStreamHandler.CreateFileStream(name);
 
                 fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 

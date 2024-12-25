@@ -70,14 +70,15 @@
   <ItemGroup>
     <Compile Include="src\API.cs" />
     <Compile Include="src\Client\CacheScanner.cs" />
-    <Compile Include="src\Client\ContentLoaderHttp.cs" />
-    <Compile Include="src\Client\ContentLoaderNet.cs" />
+    <Compile Include="src\Client\Transports\ContentLoaderHttp.cs" />
+    <Compile Include="src\Client\Transports\ContentLoaderNet.cs" />
     <Compile Include="src\Client\DataSpeedCalculator.cs" />
     <Compile Include="src\Client\DownloadFileQuery.cs" />
     <Compile Include="src\Client\Hooks\ConnectHook.cs" />
     <Compile Include="src\Client\Hooks\DisconnectHook.cs" />
     <Compile Include="src\Client\Hooks\ServerLoadingProgressHook.cs" />
     <Compile Include="src\Client\ContentLoader.cs" />
+    <Compile Include="src\Client\Transports\ILoadingTransport.cs" />
     <Compile Include="src\Client\RemoteContentManager.cs" />
     <Compile Include="src\Client\RemoteHttpInfo.cs" />
     <Compile Include="src\Client\SearchPathRemoteMods.cs" />

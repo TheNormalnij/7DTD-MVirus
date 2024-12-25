@@ -1,5 +1,4 @@
 ﻿using MVirus.Client.Transports;
-using MVirus.Shared;
 using System;
 using System.IO;
 using System.Linq;
@@ -9,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace MVirus.Client
 {
-    public class ContentLoaderHttp : ILoadingTransport
+    public class ContentLoadingTransportHttp : ILoadingTransport
     {
         private RemoteHttpInfo RemoteAddr { get; set; }
         private HttpClient Client { get; set; }
 
-        public ContentLoaderHttp(RemoteHttpInfo remote)
+        public ContentLoadingTransportHttp(RemoteHttpInfo remote)
         {
             RemoteAddr = remote;
             Client = new HttpClient();
@@ -34,8 +33,6 @@ namespace MVirus.Client
             Stream netStream = null;
             try
             {
-                PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(name)));
-
                 var urlPath = RemoteAddr.Url + Uri.EscapeDataString(name);
 
                 var request = new HttpRequestMessage(HttpMethod.Get, urlPath);

@@ -48,7 +48,7 @@ namespace MVirus.Shared.NetPackets
                     remoteHttpServer = _reader.ReadString();
                     break;
                 case RemoteFilesSource.GAME_CONNECTION:
-                    throw new NotImplementedException("GAME_CONNECTION is not implemented");
+                    break;
                 default:
                     throw new Exception("Invalid remote file source");
             }
@@ -70,7 +70,7 @@ namespace MVirus.Shared.NetPackets
                     _writer.Write(remoteHttpServer);
                     break;
                 case RemoteFilesSource.GAME_CONNECTION:
-                    throw new NotImplementedException("GAME_CONNECTION is not implemented");
+                    break;
                 default:
                     throw new Exception("Invalid remote file source");
             }
@@ -95,7 +95,13 @@ namespace MVirus.Shared.NetPackets
                 connectionManager.Disconnect();
             }
 
-            RemoteHttpInfo remoteHttp;
+            if (remoteFilesSource == RemoteFilesSource.GAME_CONNECTION)
+            {
+                RemoteContentManager.RequestContent();
+                return;
+            }
+
+            RemoteHttpInfo remoteHttp = null;
 
             if (remoteFilesSource == RemoteFilesSource.LOCAL_HTTP)
             {

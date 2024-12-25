@@ -2,6 +2,8 @@
 using System;
 using System.Threading.Tasks;
 using MVirus.Client.Transports;
+using MVirus.Shared;
+using System.IO;
 
 namespace MVirus.Client
 {
@@ -15,18 +17,18 @@ namespace MVirus.Client
         COMPLECTED
     }
 
-    public abstract class ContentLoader
+    public class ContentLoader
     {
-        private DownloadFileQuery filesToLoad;
-        private string outPath;
-        private CancellationTokenSource cancellationTokenSource;
-        private ILoadingTransport transport;
+        private readonly DownloadFileQuery filesToLoad;
+        private readonly string outPath;
+        private readonly CancellationTokenSource cancellationTokenSource;
+        private readonly ILoadingTransport transport;
 
         public LoadingState State { get; protected set; }
         public long ContentSize { get; protected set; }
-        public abstract long DownloadSize { get; protected set; }
+        public long DownloadSize { get; protected set; }
 
-        protected ContentLoader(DownloadFileQuery _files, string targetPath, ILoadingTransport _transport)
+        public ContentLoader(DownloadFileQuery _files, string targetPath, ILoadingTransport _transport)
         {
             filesToLoad = _files;
             outPath = targetPath;
@@ -84,7 +86,17 @@ namespace MVirus.Client
 
             foreach (var fileInfo in filesToLoad.list)
             {
-                await DownloadFileAsync(fileInfo);
+                try
+                {
+                    PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(fileInfo.Path)));
+                    Action<int> progressCounter = count => { DownloadSize -= count; };
+                    await transport.DownloadFileAsync(fileInfo, outPath, cancellationTokenSource.Token, progressCounter);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("[MVirus] DownloadFileAsync error: " + ex.Message);
+                    StopDownloading();
+                }
 
                 if (State == LoadingState.CANCELING)
                 {

@@ -1,4 +1,5 @@
-﻿using MVirus.Shared;
+﻿using MVirus.Client.Transports;
+using MVirus.Shared;
 using MVirus.Shared.NetPackets;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,11 +10,11 @@ namespace MVirus.Client
     {
         private static readonly SearchPathRemoteMods prefabsSearch = new SearchPathRemoteMods("Prefabs");
         private static readonly SearchPathRemoteMods prefabsImposterSearch = new SearchPathRemoteMods("Prefabs");
+        private static ILoadingTransport activeTransport;
 
         public static readonly Dictionary<string, RemoteMod> remoteMods = new Dictionary<string, RemoteMod>();
 
         public static ContentLoader currentLoading;
-        public static RemoteHttpInfo Remote { get; set; }
 
         public static void RequestServerMods(ServerModInfo[] remoteInfo)
         {
@@ -25,7 +26,7 @@ namespace MVirus.Client
             ParseRemoteMods(remoteInfo);
 
             var filesToDownload = GetAllRemoteModsFiles(remoteInfo);
-            currentLoading = new ContentLoaderHttp(Remote, filesToDownload, API.clientCachePath);
+            currentLoading = new ContentLoader(filesToDownload, API.clientCachePath, activeTransport);
             _ = Process();
         }
 
@@ -72,10 +73,22 @@ namespace MVirus.Client
                 remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod));
         }
 
+        /// <summary>
+        /// Create request for HTTP tramsport
+        /// </summary>
+        /// <param name="remoteHttpInfo"></param>
         public static void RequestContent(RemoteHttpInfo remoteHttpInfo)
         {
-            RemoteContentManager.Remote = remoteHttpInfo;
+            activeTransport = new ContentLoadingTransportHttp(remoteHttpInfo);
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
+        }
 
+        /// <summary>
+        /// Create request for interenal net transport
+        /// </summary>
+        public static void RequestContent()
+        {
+            activeTransport = new ContentLoadingTransportNet();
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
         }
 
@@ -93,7 +106,7 @@ namespace MVirus.Client
             PathAbstractions.PrefabImpostersSearchPaths.paths.Remove(prefabsImposterSearch);
         }
 
-        private static List<ServerFileInfo> GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)
+        private static DownloadFileQuery GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)
         {
             var list = new List<ServerFileInfo>();
             foreach (var remoteMod in remoteInfo)
@@ -101,7 +114,7 @@ namespace MVirus.Client
                 foreach (var file in remoteMod.Files)
                     list.Add(new ServerFileInfo(remoteMod.Name + "/" + file.Path, file.Size, file.Crc));
             }
-            return list;
+            return new DownloadFileQuery(list);
         }
 
         public static void LoadResources()
