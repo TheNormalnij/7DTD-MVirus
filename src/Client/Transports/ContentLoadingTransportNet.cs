@@ -14,20 +14,19 @@ namespace MVirus.Client.Transports
 
         public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
         {
-            var name = fileInfo.Path;
-            Log.Out("[MVirus] Download file: " + name);
+            Log.Out("[MVirus] Download file: " + fileInfo.Path);
 
             Stream fileStream = null;
             Stream netStream = null;
             try
             {
-                netStream = await API.incomingStreamHandler.CreateFileStream(name);
+                netStream = await API.incomingStreamHandler.CreateFileStream(fileInfo.Path);
 
-                fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
+                fileStream = File.Open(Path.Combine(outPath, fileInfo.Path), FileMode.Create);
 
                 await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken, progressCounter);
 
-                Log.Out("[MVirus] Download complecte: " + name);
+                Log.Out("[MVirus] Download complecte: " + fileInfo.Path);
             }
             finally
             {

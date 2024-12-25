@@ -26,14 +26,13 @@ namespace MVirus.Client
 
         public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
         {
-            var name = fileInfo.Path;
-            Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
+            Log.Out("[MVirus] Download file: " + RemoteAddr.Url + fileInfo.Path);
 
             Stream fileStream = null;
             Stream netStream = null;
             try
             {
-                var urlPath = RemoteAddr.Url + Uri.EscapeDataString(name);
+                var urlPath = RemoteAddr.Url + Uri.EscapeDataString(fileInfo.Path);
 
                 var request = new HttpRequestMessage(HttpMethod.Get, urlPath);
 
@@ -42,7 +41,7 @@ namespace MVirus.Client
 
                 netStream = await response.Content.ReadAsStreamAsync();
 
-                fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
+                fileStream = File.Open(Path.Combine(outPath, fileInfo.Path), FileMode.Create);
 
                 if (response.Content.Headers.ContentEncoding.FirstOrDefault() == "gzip")
                     await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
@@ -51,7 +50,7 @@ namespace MVirus.Client
                     await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);
 
-                Log.Out("[MVirus] Download complecte: " + name);
+                Log.Out("[MVirus] Download complecte: " + fileInfo.Path);
             }
             finally
             {
