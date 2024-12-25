@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using MVirus.Client.Transports;
 
 namespace MVirus.Client
 {
@@ -17,24 +17,22 @@ namespace MVirus.Client
 
     public abstract class ContentLoader
     {
-        protected DownloadFileQuery filesToLoad;
-        protected string outPath;
-        protected CancellationTokenSource cancellationTokenSource;
+        private DownloadFileQuery filesToLoad;
+        private string outPath;
+        private CancellationTokenSource cancellationTokenSource;
+        private ILoadingTransport transport;
 
         public LoadingState State { get; protected set; }
         public long ContentSize { get; protected set; }
         public abstract long DownloadSize { get; protected set; }
 
-        protected ContentLoader(DownloadFileQuery _files, string targetPath)
+        protected ContentLoader(DownloadFileQuery _files, string targetPath, ILoadingTransport _transport)
         {
             filesToLoad = _files;
             outPath = targetPath;
+            transport = _transport;
             cancellationTokenSource = new CancellationTokenSource();
         }
-
-        protected abstract void OnDownloadCanceled();
-
-        protected abstract Task DownloadFileAsync(ServerFileInfo fileInfo);
 
         public void StopDownloading()
         {
@@ -43,7 +41,7 @@ namespace MVirus.Client
 
             State = LoadingState.CANCELING;
             cancellationTokenSource.Cancel();
-            OnDownloadCanceled();
+            transport.OnDownloadCanceled();
         }
 
         public async Task DownloadServerFilesAsync()

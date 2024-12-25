@@ -1,30 +1,31 @@
-﻿using MVirus.Shared;
+﻿using MVirus.Client.Transports;
+using MVirus.Shared;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MVirus.Client
 {
-    internal class ContentLoaderHttp : ContentLoader
+    public class ContentLoaderHttp : ILoadingTransport
     {
         private RemoteHttpInfo RemoteAddr { get; set; }
         private HttpClient Client { get; set; }
-        public override long DownloadSize { get; protected set; }
 
-        public ContentLoaderHttp(RemoteHttpInfo remote, DownloadFileQuery files, string targetPath) : base(files, targetPath)
+        public ContentLoaderHttp(RemoteHttpInfo remote)
         {
             RemoteAddr = remote;
             Client = new HttpClient();
         }
 
-        protected override void OnDownloadCanceled()
+        public void OnDownloadCanceled()
         {
             Client.CancelPendingRequests();
         }
 
-        protected override async Task DownloadFileAsync(ServerFileInfo fileInfo)
+        public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
         {
             var name = fileInfo.Path;
             Log.Out("[MVirus] Download file: " + RemoteAddr.Url + name);
@@ -46,25 +47,20 @@ namespace MVirus.Client
 
                 fileStream = File.Open(Path.Combine(outPath, name), FileMode.Create);
 
-                Action<int> progressCounter = count => { DownloadSize -= count; };
-
                 if (response.Content.Headers.ContentEncoding.FirstOrDefault() == "gzip")
-                    await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
+                    await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                         progressCounter);
                 else
-                    await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationTokenSource.Token,
+                    await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);
 
                 Log.Out("[MVirus] Download complecte: " + name);
             }
-            catch (Exception ex)
+            finally
             {
-                Log.Error("[MVirus] DownloadFileAsync error: " + ex.Message);
-                StopDownloading();
+                netStream?.Close();
+                fileStream?.Close();
             }
-
-            netStream?.Close();
-            fileStream?.Close();
         }
     }
 }
