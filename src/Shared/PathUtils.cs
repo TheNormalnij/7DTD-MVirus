@@ -1,4 +1,6 @@
 ﻿
+using System.IO;
+
 namespace MVirus.Shared
 {
     internal class PathUtils
@@ -7,6 +9,12 @@ namespace MVirus.Shared
         {
             path = path.Replace("\\", "/");
             return !path.Contains("../");
+        }
+
+        public static void CreatePathForDir(string dir)
+        {
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                SdDirectory.CreateDirectory(dir);
         }
     }
 }

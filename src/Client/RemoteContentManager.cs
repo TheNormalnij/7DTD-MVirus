@@ -12,7 +12,7 @@ namespace MVirus.Client
 
         public static readonly Dictionary<string, RemoteMod> remoteMods = new Dictionary<string, RemoteMod>();
 
-        public static ContentLoaderHttp currentLoading;
+        public static ContentLoader currentLoading;
         public static RemoteHttpInfo Remote { get; set; }
 
         public static void RequestServerMods(ServerModInfo[] remoteInfo)
