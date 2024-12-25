@@ -70,8 +70,12 @@
   <ItemGroup>
     <Compile Include="src\API.cs" />
     <Compile Include="src\Client\CacheScanner.cs" />
-    <Compile Include="src\Client\Transports\ContentLoaderHttp.cs" />
-    <Compile Include="src\Client\Transports\ContentLoaderNet.cs" />
+    <Compile Include="src\Client\NetStreams\IncomingNetStream.cs" />
+    <Compile Include="src\Client\NetStreams\IncomingStreamHandler.cs" />
+    <Compile Include="src\Client\NetStreams\NetStreamException.cs" />
+    <Compile Include="src\Client\RingBuffer.cs" />
+    <Compile Include="src\Client\Transports\ContentLoadingTransportHttp.cs" />
+    <Compile Include="src\Client\Transports\ContentLoadingTransportNet.cs" />
     <Compile Include="src\Client\DataSpeedCalculator.cs" />
     <Compile Include="src\Client\DownloadFileQuery.cs" />
     <Compile Include="src\Client\Hooks\ConnectHook.cs" />
@@ -87,6 +91,7 @@
     <Compile Include="src\Server\Hooks\ClientAuthHook.cs" />
     <Compile Include="src\Server\MVirusConfig.cs" />
     <Compile Include="src\Server\MVirusConfigXml.cs" />
+    <Compile Include="src\Server\OutcomingStreamHandler.cs" />
     <Compile Include="src\Server\ServerModManager.cs" />
     <Compile Include="src\Shared\Crc32.cs" />
     <Compile Include="src\Client\Hooks\ServersideModDirectoryPatch.cs" />
@@ -95,9 +100,13 @@
     <Compile Include="src\Server\ContentScanner.cs" />
     <Compile Include="src\Server\ContentWebServer.cs" />
     <Compile Include="src\Shared\HashAlgorithmAsync.cs" />
+    <Compile Include="src\Server\OutcomingNetStream.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusCreateFileStream.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusFileStreamError.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHello.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHelloResponse.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusWebResources.cs" />
+    <Compile Include="src\Shared\NetStreams\NetStreamSyncData.cs" />
     <Compile Include="src\Shared\PathUtils.cs" />
     <Compile Include="src\Shared\ServerFileInfo.cs" />
     <Compile Include="src\Shared\ServerModInfo.cs" />

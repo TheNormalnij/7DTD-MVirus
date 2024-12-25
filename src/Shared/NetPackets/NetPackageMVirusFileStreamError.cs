@@ -6,6 +6,7 @@ namespace MVirus.Shared.NetPackets
     {
         NOT_FOUND,
         NOT_SUPPORTED,
+        INVALID_STATE,
         UNKNOWN_ERROR,
     }
 

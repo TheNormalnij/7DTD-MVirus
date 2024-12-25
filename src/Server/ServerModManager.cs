@@ -1,5 +1,4 @@
-﻿using MVirus.Shared;
-using MVirus.Shared.NetPackets;
+﻿using MVirus.Shared.NetPackets;
 using System;
 
 namespace MVirus.Server

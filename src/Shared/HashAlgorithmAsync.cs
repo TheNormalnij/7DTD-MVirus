@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
-namespace MVirus.src.Shared
+namespace MVirus.Shared
 {
     [ComVisible(true)]
     public abstract class HashAlgorithmAsync : HashAlgorithm
