@@ -13,7 +13,6 @@ namespace MVirus.Shared.NetPackets
     public class NetPackageMVirusHello : NetPackage
     {
         // Package config
-        public override bool Compress => true;
         public override bool AllowedBeforeAuth => true;
         public override bool FlushQueue => true;
         public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;

@@ -11,13 +11,16 @@ namespace MVirus.Client.NetStreams
         public override bool CanRead => true;
         public override bool CanSeek => false;
         public override bool CanWrite => false;
-        public override long Length => totalCount;
-        public override long Position { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override long Length => TotalCount;
+        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public int BufferAvialableSize => buffer.FreeSize;
+        public long ReadedCount { get; private set; }
+        public long TotalCount { get; private set; } = -1;
+
+        private Exception exception = null;
 
         private RingBuffer<byte> buffer = new RingBuffer<byte>(4 * 1024 * 1024);
-        private long readedCount = 0;
-        private long totalCount = 0;
-
         private StreamReading currentReading;
 
         public override void Flush()
@@ -35,8 +38,11 @@ namespace MVirus.Client.NetStreams
             if (currentReading != null)
                 throw new Exception("Reading in progress");
 
-            if (readedCount == totalCount)
+            if (ReadedCount == TotalCount)
                 return Task.FromResult(0);
+
+            if (exception != null)
+                return Task.FromException<int>(exception);
 
             currentReading = new StreamReading
             {
@@ -45,6 +51,8 @@ namespace MVirus.Client.NetStreams
                 count = count,
                 taskSource = new TaskCompletionSource<int>()
             };
+
+            DoReading();
 
             return currentReading.taskSource.Task;
         }
@@ -56,22 +64,18 @@ namespace MVirus.Client.NetStreams
 
         public override void SetLength(long value)
         {
-            totalCount = value;
+            TotalCount = value;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("Cannot write in incoming buffer");
+            throw new NotImplementedException("Cannot write in incoming stream");
         }
 
         public void RecievedData(byte[] data)
         {
             buffer.Add(data);
-            readedCount += data.Length;
-        }
-
-        public void Update()
-        {
+            ReadedCount += data.Length;
             DoReading();
         }
 
@@ -87,6 +91,21 @@ namespace MVirus.Client.NetStreams
             buffer.CopyTo(currentReading.destination, currentReading.offset, readCount);
             buffer.Discard(readCount);
             currentReading.taskSource.SetResult(readCount);
+        }
+
+        public void SetException(Exception ex)
+        {
+            exception = ex;
+
+            if (currentReading == null || currentReading.taskSource.Task.IsCompleted)
+                return;
+
+            currentReading.taskSource.SetException(ex);
+        }
+
+        public bool IsAllDataRecieved()
+        {
+            return TotalCount <= ReadedCount;
         }
     }
 

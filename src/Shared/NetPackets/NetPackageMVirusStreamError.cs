@@ -1,22 +1,18 @@
-﻿using MVirus.Server;
+﻿using MVirus.Client.NetStreams;
+using MVirus.Server;
 
 namespace MVirus.Shared.NetPackets
 {
-    public enum FileStreamErrorCode
-    {
-        NOT_FOUND,
-        NOT_SUPPORTED,
-        INVALID_STATE,
-        UNKNOWN_ERROR,
-    }
+    public class NetPackageMVirusStreamError : NetPackage {
+        public override bool AllowedBeforeAuth => true;
+        public override bool FlushQueue => true;
 
-    public class NetPackageMVirusFileStreamError : NetPackage {
         private byte streamId;
-        private FileStreamErrorCode fileStreamErrorCode;
+        private StreamErrorCode fileStreamErrorCode;
 
-        public NetPackageMVirusFileStreamError Setup(byte _streamId, FileStreamErrorCode code)
+        public NetPackageMVirusStreamError Setup(byte _streamId, NetStreamException ex)
         {
-            fileStreamErrorCode = code;
+            fileStreamErrorCode = ex.ErrorCode;
             streamId = _streamId;
             return this;
         }
@@ -24,7 +20,7 @@ namespace MVirus.Shared.NetPackets
         public override void read(PooledBinaryReader _reader)
         {
             streamId = _reader.ReadByte();
-            fileStreamErrorCode = (FileStreamErrorCode)_reader.ReadByte();
+            fileStreamErrorCode = (StreamErrorCode)_reader.ReadByte();
         }
 
         public override void write(PooledBinaryWriter _writer)

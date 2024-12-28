@@ -1,9 +1,13 @@
-﻿using MVirus.Server;
+﻿using MVirus.Client.NetStreams;
+using MVirus.Server;
 
 namespace MVirus.Shared.NetPackets
 {
     public class NetPackageMVirusCreateFileStream : NetPackage
     {
+        public override bool AllowedBeforeAuth => true;
+        public override bool FlushQueue => true;
+
         private string filePath;
         private byte streamId;
 
@@ -37,7 +41,7 @@ namespace MVirus.Shared.NetPackets
             if (ServerModManager.netTransferManager != null)
                 ServerModManager.netTransferManager.HandleStreamRequest(Sender, filePath, streamId);
             else
-                Sender.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusFileStreamError>().Setup(streamId, FileStreamErrorCode.NOT_SUPPORTED));
+                Sender.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusStreamError>().Setup(streamId, new NetStreamException(StreamErrorCode.NOT_SUPPORTED)));
         }
     }
 }

@@ -11,6 +11,7 @@ namespace MVirus.Client
         private long tail;
         private long head;
 
+        public int FreeSize => buffer.Length - size;
         public int Count => size;
         public int MaxCount => buffer.Length;
         public bool IsReadOnly => false;
@@ -41,9 +42,28 @@ namespace MVirus.Client
 
         public void Add(T[] items)
         {
-            // TODO make it faster
-            foreach (var value in items)
-                Add(value);
+            ThrowWhenNoSpace(items.Length);
+
+            var nextHead = head + items.Length;
+
+            if (nextHead > buffer.Length)
+            {
+                nextHead = nextHead - buffer.Length;
+
+                for (long i = head; i <  buffer.Length; i++)
+                    buffer[i] = items[i - head];
+
+                var writted = buffer.Length - head;
+                for (long i = 0; i < nextHead; i++)
+                    buffer[i] = items[writted + i];
+
+                head = nextHead;
+            } else
+            {
+                items.CopyTo(buffer, head);
+            }
+
+            size = size + items.Length;
         }
 
         public void Clear()
@@ -107,6 +127,12 @@ namespace MVirus.Client
             if (index < 0 || index >= size) throw new ArgumentOutOfRangeException();
 
             throw new NotImplementedException();
+        }
+
+        private void ThrowWhenNoSpace(int reqSpace)
+        {
+            if (FreeSize < reqSpace)
+                throw new ArgumentException("No free size");
         }
     }
 

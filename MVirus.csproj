@@ -72,7 +72,11 @@
     <Compile Include="src\Client\CacheScanner.cs" />
     <Compile Include="src\Client\NetStreams\IncomingNetStream.cs" />
     <Compile Include="src\Client\NetStreams\IncomingStreamHandler.cs" />
-    <Compile Include="src\Client\NetStreams\NetStreamException.cs" />
+    <Compile Include="src\Server\NetStreams\FileStreamOptionalCompressed.cs" />
+    <Compile Include="src\Shared\MVLog.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamData.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamUpdate.cs" />
+    <Compile Include="src\Shared\NetStreams\NetStreamException.cs" />
     <Compile Include="src\Client\RingBuffer.cs" />
     <Compile Include="src\Client\Transports\ContentLoadingTransportHttp.cs" />
     <Compile Include="src\Client\Transports\ContentLoadingTransportNet.cs" />
@@ -91,7 +95,9 @@
     <Compile Include="src\Server\Hooks\ClientAuthHook.cs" />
     <Compile Include="src\Server\MVirusConfig.cs" />
     <Compile Include="src\Server\MVirusConfigXml.cs" />
-    <Compile Include="src\Server\OutcomingStreamHandler.cs" />
+    <Compile Include="src\Server\NetStreams\FileStreamSource.cs" />
+    <Compile Include="src\Server\NetStreams\IStreamSource.cs" />
+    <Compile Include="src\Server\NetStreams\OutcomingStreamHandler.cs" />
     <Compile Include="src\Server\ServerModManager.cs" />
     <Compile Include="src\Shared\Crc32.cs" />
     <Compile Include="src\Client\Hooks\ServersideModDirectoryPatch.cs" />
@@ -100,9 +106,9 @@
     <Compile Include="src\Server\ContentScanner.cs" />
     <Compile Include="src\Server\ContentWebServer.cs" />
     <Compile Include="src\Shared\HashAlgorithmAsync.cs" />
-    <Compile Include="src\Server\OutcomingNetStream.cs" />
+    <Compile Include="src\Server\NetStreams\OutcomingNetStreamHandler.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusCreateFileStream.cs" />
-    <Compile Include="src\Shared\NetPackets\NetPackageMVirusFileStreamError.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamError.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHello.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHelloResponse.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusWebResources.cs" />
