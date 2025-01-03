@@ -112,7 +112,7 @@ namespace MVirus.Client
 
         private bool IsFileListSafe()
         {
-            return !filesToLoad.Exists(item => !PathUtils.IsSafeRelativePath(item.Path));
+            return !filesToLoad.Exists(item => !PathUtils.IsSafeClientFilePath(item.Path));
         }
 
         private void CalculateDownloadSize()
