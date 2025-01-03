@@ -66,34 +66,48 @@ namespace MVirus.Server
 
             if (string.IsNullOrEmpty(filename))
             {
-                SendError(context.Response, HttpStatusCode.NotFound);
+                await SendError(context.Response, HttpStatusCode.NotFound);
                 return;
             }
 
             if (!PathUtils.IsSafeRelativePath(filename))
             {
-                SendError(context.Response, HttpStatusCode.Forbidden);
+                await SendError(context.Response, HttpStatusCode.Forbidden);
                 return;
             }
 
             filename = Path.Combine(_rootDirectory, filename);
 
-            if (!File.Exists(filename))
-            {
-                SendError(context.Response, HttpStatusCode.NotFound);
-                return;
-            }
-
+            bool compressed;
             FileStream input;
 
             try
             {
-                input = File.OpenRead(filename);
+                try
+                {
+                    input = File.OpenRead(filename + ".gz");
+                    compressed = true;
+                }
+                catch (FileNotFoundException)
+                {
+                    input = File.OpenRead(filename);
+                    compressed = false;
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                await SendError(context.Response, HttpStatusCode.NotFound);
+                return;
+            }
+            catch (FileNotFoundException)
+            {
+                await SendError(context.Response, HttpStatusCode.NotFound);
+                return;
             }
             catch (Exception ex)
             {
-                SendError(context.Response, HttpStatusCode.InternalServerError);
                 Log.Error(ex.Message);
+                await SendError(context.Response, HttpStatusCode.InternalServerError);
                 return;
             }
 
@@ -102,8 +116,11 @@ namespace MVirus.Server
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 context.Response.ContentType = "application/octet-stream";
                 context.Response.ContentLength64 = input.Length;
+                
                 context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
                 context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
+                if (compressed)
+                    context.Response.AddHeader("Content-Encoding", "gzip");
 
                 await input.CopyToAsync(context.Response.OutputStream);
                 await context.Response.OutputStream.FlushAsync();
@@ -117,9 +134,10 @@ namespace MVirus.Server
             context.Response.OutputStream.Close();
         }
 
-        private void SendError(HttpListenerResponse response, HttpStatusCode code = HttpStatusCode.InternalServerError)
+        private async Task SendError(HttpListenerResponse response, HttpStatusCode code = HttpStatusCode.InternalServerError)
         {
             response.StatusCode = (int)code;
+            await response.OutputStream.FlushAsync();
             response.OutputStream.Close();
         }
 
@@ -130,11 +148,5 @@ namespace MVirus.Server
             _serverThread = new Thread(Listen);
             _serverThread.Start();
         }
-    }
-
-    public class ServerStartParameters
-    {
-        public string Path { get; set; }
-        public int Port { get; set; }
     }
 }

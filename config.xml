@@ -12,4 +12,7 @@
 	<!-- Port for internal HTTP file server -->
 	<property name="HttpPort" value="24000"/>
 
+	<!-- Enable compression for mod files -->
+	<property name="ModCompression" value="true"/>
+			  
 </MVirusServerSettings>
