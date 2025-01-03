@@ -53,6 +53,15 @@ namespace MVirus.Server
             CloseClientStream(sender, clientRequestId, false);
         }
 
+        public void HandleSyncData(ClientInfo sender, List<NetStreamSyncData> data)
+        {
+            foreach (NetStreamSyncData syncData in data)
+            {
+                var handler = activeRequest.GetClientStream(sender, syncData.streamId);
+                handler?.UpdateWindowSize(syncData.readedCount, syncData.bufferSize);
+            }
+        }
+
         public void CloseAllClientStreams(ClientInfo client)
         {
             foreach (var handler in activeRequest.GetStreams(client))
@@ -90,10 +99,15 @@ namespace MVirus.Server
         {
             while (enabled)
             {
-                try
+                var removeList = new List<OutcomingNetStreamHandler>();
+                foreach (var client in activeRequest.GetActiveClients())
                 {
-                    var removeList = new List<OutcomingNetStreamHandler>();
-                    foreach (var client in activeRequest.GetActiveClients())
+                    if (client.netConnection[0].IsDisconnected())
+                    {
+                        foreach (var handler in activeRequest.GetStreams(client))
+                            removeList.Add(handler);
+                    }
+                    try
                     {
                         foreach (var handler in activeRequest.GetStreams(client))
                         {
@@ -101,17 +115,13 @@ namespace MVirus.Server
                             if (handler.finished)
                                 removeList.Add(handler);
                         }
+                    } catch (Exception ex) {
+                        MVLog.Exception(ex);
                     }
+                }
 
-                    foreach (var handler in removeList)
-                    {
-                        CloseClientStream(handler.client, handler.streamId, true);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MVLog.Exception(ex);
-                }
+                foreach (var handler in removeList)
+                    CloseClientStream(handler.client, handler.streamId, true);
 
                 await Task.Delay(5);
             }

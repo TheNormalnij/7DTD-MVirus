@@ -8,7 +8,7 @@ namespace MVirus.Shared.NetPackets
         File = 0,
     }
 
-    public class NetPackageMVirusCreateStream : NetPackage
+    public class NetPackageMVirusStreamCreate : NetPackage
     {
         public override bool AllowedBeforeAuth => true;
         public override bool FlushQueue => true;
@@ -17,7 +17,7 @@ namespace MVirus.Shared.NetPackets
         private byte streamId;
         private RemoteStreamType streamType;
 
-        public NetPackageMVirusCreateStream Setup(string _filePath, byte id)
+        public NetPackageMVirusStreamCreate Setup(string _filePath, byte id)
         {
             filePath = _filePath;
             streamId = id;

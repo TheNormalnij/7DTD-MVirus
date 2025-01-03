@@ -81,6 +81,9 @@ namespace MVirus.Server.NetStreams
                 return;
 
             clientStreams.Remove(stream);
+
+            if (clientStreams.Count == 0)
+                store.Remove(client);
         }
     }
 }

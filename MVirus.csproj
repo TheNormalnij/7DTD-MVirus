@@ -76,6 +76,7 @@
     <Compile Include="src\Server\NetStreams\OutgoingStreamStore.cs" />
     <Compile Include="src\Shared\MVLog.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamData.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamSync.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamUpdate.cs" />
     <Compile Include="src\Shared\NetStreams\NetStreamException.cs" />
     <Compile Include="src\Client\RingBuffer.cs" />
@@ -108,7 +109,7 @@
     <Compile Include="src\Server\ContentWebServer.cs" />
     <Compile Include="src\Shared\HashAlgorithmAsync.cs" />
     <Compile Include="src\Server\NetStreams\OutcomingNetStreamHandler.cs" />
-    <Compile Include="src\Shared\NetPackets\NetPackageMVirusCreateStream.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamCreate.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamError.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHello.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusHelloResponse.cs" />

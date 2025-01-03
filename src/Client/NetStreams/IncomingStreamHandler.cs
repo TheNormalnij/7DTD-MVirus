@@ -32,7 +32,7 @@ namespace MVirus.Client.NetStreams
                 creatingTask = taskSource,
             };
 
-            var request = NetPackageManager.GetPackage<NetPackageMVirusCreateStream>().Setup(path, streamId);
+            var request = NetPackageManager.GetPackage<NetPackageMVirusStreamCreate>().Setup(path, streamId);
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
 
             return taskSource.Task;
@@ -61,7 +61,6 @@ namespace MVirus.Client.NetStreams
             if (request.stream.IsAllDataRecieved())
             {
                 request.status = StreamStatus.FINISHED;
-                SendStreamFinished(streamId);
             }
         }
 
@@ -83,6 +82,7 @@ namespace MVirus.Client.NetStreams
             request.stream = new IncomingNetStream();
             request.stream.SetLength(streamSize);
             request.creatingTask.SetResult(request.stream);
+            request.status = StreamStatus.READING;
 
             if (!streamsSynced)
                 StartStreamSyncing();
@@ -117,6 +117,8 @@ namespace MVirus.Client.NetStreams
                 default:
                     break;
             }
+
+            activeRequests[streamId] = null;
         }
 
         public void HandleError(byte streamId, StreamErrorCode code)
@@ -137,11 +139,6 @@ namespace MVirus.Client.NetStreams
             }
         }
 
-        private void SendStreamFinished(byte streamId)
-        {
-
-        }
-
         private void SendStreamError(byte streamId, StreamErrorCode code)
         {
             var request = NetPackageManager.GetPackage<NetPackageMVirusStreamError>().Setup(streamId, new NetStreamException(code));
@@ -150,21 +147,27 @@ namespace MVirus.Client.NetStreams
 
         private void SyncStreams()
         {
-            List<NetStreamSyncData> syncData = new List<NetStreamSyncData>();
+            var syncData = new List<NetStreamSyncData>();
 
             for (int streamId = 0; streamId < activeRequests.Length; streamId++)
             {
                 var req = activeRequests[streamId];
-                if (req == null)
+                if (req != null)
                 {
                     syncData.Add(new NetStreamSyncData
                     {
-                        streamId = streamId,
+                        streamId = (byte)streamId,
                         readedCount = req.stream.SendedCount,
                         bufferSize = req.stream.BufferAvialableSize,
                     });
                 }
             }
+
+            if (syncData.Count == 0)
+                return;
+
+            var request = NetPackageManager.GetPackage<NetPackageMVirusStreamSync>().Setup(syncData);
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
         }
 
         private void StartStreamSyncing()
@@ -210,13 +213,6 @@ namespace MVirus.Client.NetStreams
         READING,
         CLOSING,
         FINISHED
-    }
-
-    public class NetStreamSyncData
-    {
-        public int streamId;
-        public long readedCount;
-        public long bufferSize;
     }
 
     public class NetStreamRequest
