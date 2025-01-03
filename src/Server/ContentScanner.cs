@@ -31,9 +31,7 @@ namespace MVirus.Server
                 var files = new List<ServerFileInfo>();
 
                 var startCut = mod.Path.Length + 1;
-                CacheDirectory(files, startCut, mod.Path + "/Resources", modCachePath + "/Resources");
-                CacheDirectory(files, startCut, mod.Path + "/UIAtlases", modCachePath + "/UIAtlases");
-                CacheDirectory(files, startCut, mod.Path + "/Prefabs", modCachePath + "/Prefabs");
+                CacheDirectory(files, startCut, mod.Path, modCachePath);
 
                 var modInfo = new ServerModInfo(mod.Name, files.ToArray());
                 loadedMods.Add(modInfo);
@@ -57,6 +55,9 @@ namespace MVirus.Server
 
             foreach (var file in SdDirectory.GetFiles(path))
             {
+                if (!PathUtils.IsAllowedModFileExtension(file))
+                    continue;
+
                 var targetFilePath = CombineHttpPath(targetPath, Path.GetFileName(file));
                 SdFile.Copy(file, targetFilePath);
 
