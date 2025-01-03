@@ -3,6 +3,7 @@
 	<!-- Used file transfer protocol:
 		0 - use internal HTTP server
 		1 - use external HTTP server
+		2 - use game connection (experemental)
 	-->
 	<property name="FileTransferType" value="0"/>
 

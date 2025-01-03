@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MVirus.Shared;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace MVirus.Client.Transports
 
         public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
         {
-            Log.Out("[MVirus] Download file: " + fileInfo.Path);
+            MVLog.Out("Download file: " + fileInfo.Path);
 
             Stream fileStream = null;
             Stream netStream = null;
@@ -26,7 +27,7 @@ namespace MVirus.Client.Transports
 
                 await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken, progressCounter);
 
-                Log.Out("[MVirus] Download complecte: " + fileInfo.Path);
+                MVLog.Out("Download complecte: " + fileInfo.Path);
             }
             finally
             {

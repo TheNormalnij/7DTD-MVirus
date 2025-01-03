@@ -84,13 +84,13 @@ namespace MVirus.Shared.NetPackets
 
             if (MVirusProtocolVersion != 0)
             {
-                Log.Warning("[MVirus] Protocol version missmatch");
+                MVLog.Warning("Protocol version missmatch");
                 connectionManager.Disconnect();
             }
 
             if (MVirusMinimalBuild > Version.VERSION)
             {
-                Log.Warning("[MVirus] Server requests MVirus " + MVirusMinimalBuild + ". Curent version: " + Version.VERSION);
+                MVLog.Warning("Server requests MVirus " + MVirusMinimalBuild + ". Curent version: " + Version.VERSION);
                 connectionManager.Disconnect();
             }
 
@@ -100,7 +100,7 @@ namespace MVirus.Shared.NetPackets
                 return;
             }
 
-            RemoteHttpInfo remoteHttp = null;
+            RemoteHttpInfo remoteHttp;
 
             if (remoteFilesSource == RemoteFilesSource.LOCAL_HTTP)
             {

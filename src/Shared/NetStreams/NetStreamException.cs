@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MVirus.Client.NetStreams
+namespace MVirus.Shared.NetStreams
 {
     public enum StreamErrorCode
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MVirus.Shared;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -36,7 +37,7 @@ namespace MVirus.Client
 
             head++;
             size++;
-            if (head > buffer.Length)
+            if (head >= buffer.Length)
                 head = 0;
         }
 
@@ -46,7 +47,7 @@ namespace MVirus.Client
 
             var nextHead = head + items.Length;
 
-            if (nextHead > buffer.Length)
+            if (nextHead >= buffer.Length)
             {
                 nextHead = nextHead - buffer.Length;
 
@@ -56,13 +57,12 @@ namespace MVirus.Client
                 var writted = buffer.Length - head;
                 for (long i = 0; i < nextHead; i++)
                     buffer[i] = items[writted + i];
-
-                head = nextHead;
             } else
             {
                 items.CopyTo(buffer, head);
             }
 
+            head = nextHead;
             size = size + items.Length;
         }
 
@@ -83,29 +83,37 @@ namespace MVirus.Client
             CopyTo(array, arrayIndex, size);
         }
 
-        public void CopyTo(T[] array, int arrayIndex, int count)
+        public void CopyTo(T[] array, int arrayIndex, long count)
         {
             if (count < 0 || count > size) throw new ArgumentOutOfRangeException("count");
 
             if (head > tail)
             {
-                for (int i = 0; i < count; i++)
-                {
+                for (long i = 0; i < count; i++)
                     array[arrayIndex + i] = buffer[tail + i];
-                }
             } else
             {
-                throw new NotImplementedException();
+                long firstSize = buffer.Length - tail;
+                for (long i = 0; i < firstSize; i++)
+                    array[arrayIndex + i] = buffer[tail + i];
+
+                count -= firstSize;
+                for (long i = 0; i < count; i++)
+                    array[arrayIndex + i + firstSize] = buffer[i];
             }
         }
 
         public void Discard(int count)
         {
+            if (count < 0 || count > size) throw new ArgumentOutOfRangeException("count");
+
             var newTail = tail + count;
-            if (newTail > buffer.Length)
-                tail = buffer.Length - newTail;
+            if (newTail >= buffer.Length)
+                tail = newTail - buffer.Length;
             else
                 tail = newTail;
+
+            size -= count;
         }
 
         public IEnumerator<T> GetEnumerator()

@@ -1,5 +1,7 @@
 ﻿
+using MVirus.Shared;
 using MVirus.Shared.NetPackets;
+using MVirus.Shared.NetStreams;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -8,7 +10,8 @@ namespace MVirus.Client.NetStreams
 {
     public class IncomingStreamHandler
     {
-        private readonly NetStreamRequest[] activeRequests = new NetStreamRequest[3];
+        private const long STREAM_POOL_SIZE = 10;
+        private readonly NetStreamRequest[] activeRequests = new NetStreamRequest[STREAM_POOL_SIZE];
         private bool streamsSynced = false;
 
         /// <summary>
@@ -22,7 +25,14 @@ namespace MVirus.Client.NetStreams
 
             var streamId = GetNextStreamId();
 
-            var request = NetPackageManager.GetPackage<NetPackageMVirusCreateFileStream>().Setup(path, streamId);
+            activeRequests[streamId] = new NetStreamRequest
+            {
+                stream = null,
+                status = StreamStatus.CREATING,
+                creatingTask = taskSource,
+            };
+
+            var request = NetPackageManager.GetPackage<NetPackageMVirusCreateStream>().Setup(path, streamId);
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
 
             return taskSource.Task;
@@ -70,9 +80,43 @@ namespace MVirus.Client.NetStreams
                 return;
             }
 
+            request.stream = new IncomingNetStream();
             request.stream.SetLength(streamSize);
-
             request.creatingTask.SetResult(request.stream);
+
+            if (!streamsSynced)
+                StartStreamSyncing();
+        }
+
+        public void HandleStreamClose(byte streamId)
+        {
+            var request = activeRequests[streamId];
+            if (request == null)
+            {
+                SendStreamError(streamId, StreamErrorCode.NOT_FOUND);
+                return;
+            }
+
+            switch (request.status)
+            {
+                case StreamStatus.CREATING:
+                    {
+                        request.creatingTask.SetException(new NetStreamException("Closed by server"));
+                        break;
+                    }
+                case StreamStatus.READING:
+                    {
+                        request.stream.SetException(new NetStreamException("Closed by server"));
+                        break;
+                    }
+                case StreamStatus.CLOSING:
+                    {
+                        request.status = StreamStatus.FINISHED;
+                        break;
+                    }
+                default:
+                    break;
+            }
         }
 
         public void HandleError(byte streamId, StreamErrorCode code)
@@ -80,7 +124,7 @@ namespace MVirus.Client.NetStreams
             var stream = activeRequests[streamId];
             if (stream == null)
             {
-                Log.Error("[MVirus] Unknown stream error: " + code.ToString());
+                MVLog.Error("Unknown stream error: " + code.ToString());
                 return;
             }
 
@@ -100,7 +144,7 @@ namespace MVirus.Client.NetStreams
 
         private void SendStreamError(byte streamId, StreamErrorCode code)
         {
-            var request = NetPackageManager.GetPackage<NetPackageMVirusStreamError>().Setup(streamId, code);
+            var request = NetPackageManager.GetPackage<NetPackageMVirusStreamError>().Setup(streamId, new NetStreamException(code));
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
         }
 
@@ -116,7 +160,7 @@ namespace MVirus.Client.NetStreams
                     syncData.Add(new NetStreamSyncData
                     {
                         streamId = streamId,
-                        readedCount = req.stream.ReadedCount,
+                        readedCount = req.stream.SendedCount,
                         bufferSize = req.stream.BufferAvialableSize,
                     });
                 }
@@ -139,7 +183,7 @@ namespace MVirus.Client.NetStreams
             while (streamsSynced)
             {
                 SyncStreams();
-                if (HasActiveStreams())
+                if (!HasActiveStreams())
                 {
                     StopStreamSyncing();
                     return;

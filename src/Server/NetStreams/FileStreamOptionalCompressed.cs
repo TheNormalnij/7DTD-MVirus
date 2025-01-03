@@ -1,4 +1,4 @@
-﻿using MVirus.Client.NetStreams;
+﻿using MVirus.Shared.NetStreams;
 using MVirus.Shared;
 using System.IO;
 

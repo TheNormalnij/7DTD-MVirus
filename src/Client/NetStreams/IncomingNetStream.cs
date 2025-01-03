@@ -1,4 +1,5 @@
 ﻿
+using MVirus.Shared;
 using System;
 using System.IO;
 using System.Threading;
@@ -12,16 +13,19 @@ namespace MVirus.Client.NetStreams
         public override bool CanSeek => false;
         public override bool CanWrite => false;
         public override long Length => TotalCount;
-        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public override long Position { get => readedCount; set => throw new NotImplementedException(); }
 
         public int BufferAvialableSize => buffer.FreeSize;
-        public long ReadedCount { get; private set; }
+        public long SendedCount { get; private set; }
         public long TotalCount { get; private set; } = -1;
+        private long readedCount = 0;
 
         private Exception exception = null;
 
-        private RingBuffer<byte> buffer = new RingBuffer<byte>(4 * 1024 * 1024);
+        private readonly RingBuffer<byte> buffer = new RingBuffer<byte>(4 * 1024 * 1024);
         private StreamReading currentReading;
+
+        public IncomingNetStream() { }
 
         public override void Flush()
         {
@@ -38,7 +42,7 @@ namespace MVirus.Client.NetStreams
             if (currentReading != null)
                 throw new Exception("Reading in progress");
 
-            if (ReadedCount == TotalCount)
+            if (SendedCount == TotalCount)
                 return Task.FromResult(0);
 
             if (exception != null)
@@ -75,7 +79,7 @@ namespace MVirus.Client.NetStreams
         public void RecievedData(byte[] data)
         {
             buffer.Add(data);
-            ReadedCount += data.Length;
+            SendedCount += data.Length;
             DoReading();
         }
 
@@ -87,10 +91,14 @@ namespace MVirus.Client.NetStreams
             if (currentReading == null || currentReading.taskSource.Task.IsCompleted)
                 return;
 
-            var readCount = Math.Min(currentReading.count, buffer.Count);
-            buffer.CopyTo(currentReading.destination, currentReading.offset, readCount);
-            buffer.Discard(readCount);
-            currentReading.taskSource.SetResult(readCount);
+            var transferBytes = Math.Min(currentReading.count, buffer.Count);
+
+            buffer.CopyTo(currentReading.destination, currentReading.offset, transferBytes);
+            buffer.Discard(transferBytes);
+            currentReading.taskSource.SetResult(transferBytes);
+
+            readedCount += transferBytes;
+            currentReading = null;
         }
 
         public void SetException(Exception ex)
@@ -101,11 +109,12 @@ namespace MVirus.Client.NetStreams
                 return;
 
             currentReading.taskSource.SetException(ex);
+            currentReading = null;
         }
 
         public bool IsAllDataRecieved()
         {
-            return TotalCount <= ReadedCount;
+            return TotalCount <= SendedCount;
         }
     }
 

@@ -4,7 +4,7 @@ namespace MVirus.Shared
 {
     public class MVLog
     {
-        private static string PREFIX = "[MVirus] ";
+        private const string PREFIX = "[MVirus] ";
 
         public static void Out(string message)
         {

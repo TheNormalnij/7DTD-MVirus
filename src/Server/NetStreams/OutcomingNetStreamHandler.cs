@@ -6,27 +6,34 @@ namespace MVirus.Server
 {
     public class OutcomingNetStreamHandler
     {
+        private NetPackageMVirusStreamData activePackage;
+
         private readonly byte[] buffer;
-        private readonly Stream stream;
+        public readonly Stream stream;
         public readonly ClientInfo client;
         public readonly byte streamId;
+        public bool finished;
+
 
         public OutcomingNetStreamHandler(ClientInfo _client, Stream sourceStream, byte clientId)
         {
             client = _client;
             stream = sourceStream;
             streamId = clientId;
-            buffer = new byte[4096];
+            buffer = new byte[1024 * 50];
+            finished = false;
         }
 
         public void Close() {
             stream.Close();
         }
 
-        private async Task Update()
+        public async Task Update()
         {
-
-            await SendDataToClient();
+            var connection = client.netConnection[0] as NetConnectionSimple;
+            var streamPosition = connection.reliableSendStreamWriter.BaseStream.Position;
+            if (activePackage == null || activePackage.WasWritted)
+                await SendDataToClient();
         }
 
         private async Task SendDataToClient()
@@ -34,11 +41,12 @@ namespace MVirus.Server
             var readedCount = await stream.ReadAsync(buffer, 0, buffer.Length);
             if (readedCount == 0)
             {
+                finished = true;
                 return;
             }
 
-            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamData>().Setup(streamId, buffer, readedCount);
-            client.SendPackage(req);
+            activePackage = NetPackageManager.GetPackage<NetPackageMVirusStreamData>().Setup(streamId, buffer, readedCount);
+            client.SendPackage(activePackage);
         }
     }
 }

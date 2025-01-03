@@ -25,6 +25,7 @@ namespace MVirus.Server
 
         public static void OnServerGameStopped() {
             contentServer?.Stop();
+            netTransferManager?.Stop();
         }
 
         private static void CreateContentDeliveryHandler()
