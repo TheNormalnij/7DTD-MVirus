@@ -3,14 +3,17 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MVirus.Server.NetStreams;
+using MVirus.Shared.NetStreams;
 using MVirus.Shared;
+using System.Xml.Linq;
 
 namespace MVirus.Server
 {
     public class ContentWebServer
     {
         private Thread _serverThread;
-        private string _rootDirectory;
+        private IStreamSource _streamSource;
         private HttpListener _listener;
         private int _port;
         private bool closing;
@@ -20,9 +23,12 @@ namespace MVirus.Server
             get { return _port; }
         }
 
-        public ContentWebServer(string path, int port = 8080)
+        public ContentWebServer(IStreamSource streamSource, int port = 8080)
         {
-            Initialize(path, port);
+            _streamSource = streamSource;
+            _port = port;
+            _serverThread = new Thread(Listen);
+            _serverThread.Start();
         }
 
         public void Stop()
@@ -63,6 +69,7 @@ namespace MVirus.Server
             string filename = Uri.UnescapeDataString(context.Request.Url.AbsolutePath);
 
             filename = filename.Substring(1);
+            MVLog.Debug("Request path: " + filename);
 
             if (string.IsNullOrEmpty(filename))
             {
@@ -70,41 +77,16 @@ namespace MVirus.Server
                 return;
             }
 
-            if (!PathUtils.IsSafeRelativePath(filename))
-            {
-                await SendError(context.Response, HttpStatusCode.Forbidden);
-                return;
-            }
-
-            filename = Path.Combine(_rootDirectory, filename);
-
-            bool compressed;
-            FileStream input;
+            RequestedStreamParams streamRequest;
 
             try
             {
-                try
-                {
-                    input = File.OpenRead(filename + ".gz");
-                    compressed = true;
-                }
-                catch (FileNotFoundException)
-                {
-                    input = File.OpenRead(filename);
-                    compressed = false;
-                }
-            }
-            catch (DirectoryNotFoundException)
+                streamRequest = _streamSource.CreateStream(filename);
+            } catch (NetStreamException ex)
             {
-                await SendError(context.Response, HttpStatusCode.NotFound);
+                await SendError(context.Response, ex.ErrorCode == StreamErrorCode.NOT_FOUND ? HttpStatusCode.NotFound : HttpStatusCode.InternalServerError);
                 return;
-            }
-            catch (FileNotFoundException)
-            {
-                await SendError(context.Response, HttpStatusCode.NotFound);
-                return;
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 Log.Error(ex.Message);
                 await SendError(context.Response, HttpStatusCode.InternalServerError);
@@ -115,14 +97,14 @@ namespace MVirus.Server
                 //Adding permanent http response headers
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 context.Response.ContentType = "application/octet-stream";
-                context.Response.ContentLength64 = input.Length;
+                context.Response.ContentLength64 = streamRequest.stream.Length;
                 
                 context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
                 context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
-                if (compressed)
+                if (streamRequest.compressed)
                     context.Response.AddHeader("Content-Encoding", "gzip");
 
-                await input.CopyToAsync(context.Response.OutputStream);
+                await streamRequest.stream.CopyToAsync(context.Response.OutputStream);
                 await context.Response.OutputStream.FlushAsync();
             }
             catch (Exception ex)
@@ -130,7 +112,7 @@ namespace MVirus.Server
                 Log.Exception(ex);
             }
 
-            input.Close();
+            streamRequest.stream.Close();
             context.Response.OutputStream.Close();
         }
 
@@ -141,12 +123,5 @@ namespace MVirus.Server
             response.OutputStream.Close();
         }
 
-        private void Initialize(string path, int port)
-        {
-            _rootDirectory = path;
-            _port = port;
-            _serverThread = new Thread(Listen);
-            _serverThread.Start();
-        }
     }
 }

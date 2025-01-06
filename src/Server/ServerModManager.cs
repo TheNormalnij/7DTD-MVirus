@@ -31,7 +31,7 @@ namespace MVirus.Server
         private static void CreateContentDeliveryHandler()
         {
             if (MVirusConfig.RemoteFilesSource == RemoteFilesSource.LOCAL_HTTP)
-                contentServer = new ContentWebServer(ContentScanner.cachePath, MVirusConfig.FilesHttpPort);
+                contentServer = new ContentWebServer(CreateFileStreamSource(), MVirusConfig.FilesHttpPort);
             else if (MVirusConfig.RemoteFilesSource == RemoteFilesSource.GAME_CONNECTION)
                 netTransferManager = new OutcomingStreamHandler(CreateFileStreamSource());
         }
