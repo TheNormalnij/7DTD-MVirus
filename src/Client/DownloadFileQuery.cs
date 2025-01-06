@@ -1,5 +1,4 @@
-﻿using MVirus.Client;
-using MVirus.Shared;
+﻿using MVirus.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +23,7 @@ namespace MVirus.Client
 
         public bool IsFileListSafe()
         {
-            return !list.Exists(item => !PathUtils.IsSafeRelativePath(item.Path));
+            return !list.Exists(item => !PathUtils.IsSafeClientFilePath(item.Path));
         }
 
         public async Task FilterLocalFiles(string cachePath, CancellationToken cancellationToken, Action<ServerFileInfo> exists)
