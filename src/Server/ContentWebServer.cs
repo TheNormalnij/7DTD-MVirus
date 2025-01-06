@@ -69,7 +69,6 @@ namespace MVirus.Server
             string filename = Uri.UnescapeDataString(context.Request.Url.AbsolutePath);
 
             filename = filename.Substring(1);
-            MVLog.Debug("Request path: " + filename);
 
             if (string.IsNullOrEmpty(filename))
             {
