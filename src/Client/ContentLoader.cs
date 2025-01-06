@@ -90,11 +90,15 @@ namespace MVirus.Client
                 {
                     PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(fileInfo.Path)));
                     Action<int> progressCounter = count => { DownloadSize -= count; };
+
+                    MVLog.Out("Download file: " + fileInfo.Path);
                     await transport.DownloadFileAsync(fileInfo, outPath, cancellationTokenSource.Token, progressCounter);
+                    MVLog.Out("Download complecte: " + fileInfo.Path);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("[MVirus] DownloadFileAsync error: " + ex.Message);
+                    MVLog.Exception(ex);
+                    MVLog.Error("[MVirus] DownloadFileAsync error: " + ex.Message);
                     StopDownloading();
                 }
 

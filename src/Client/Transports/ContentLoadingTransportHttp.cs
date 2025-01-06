@@ -27,8 +27,6 @@ namespace MVirus.Client
 
         public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
         {
-            MVLog.Out("Download file: " + RemoteAddr.Url + fileInfo.Path);
-
             Stream fileStream = null;
             Stream netStream = null;
             try
@@ -50,8 +48,6 @@ namespace MVirus.Client
                 else
                     await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);
-
-                MVLog.Out("Download complecte: " + fileInfo.Path);
             }
             finally
             {

@@ -7,6 +7,7 @@ namespace MVirus.Shared.NetPackets
     public class NetPackageMVirusStreamSync : NetPackage
     {
         public override bool AllowedBeforeAuth => true;
+        public override bool ReliableDelivery => false;
         public override bool FlushQueue => true;
 
         private List<NetStreamSyncData> data;

@@ -1,43 +1,45 @@
-﻿using MVirus.Shared.NetStreams;
-using MVirus.Server;
-
+﻿
 namespace MVirus.Shared.NetPackets
 {
-    public class NetPackageMVirusStreamError : NetPackage {
+    public class NetPackageMVirusStreamCreated : NetPackage
+    {
         public override bool AllowedBeforeAuth => true;
 
         private byte streamId;
-        private StreamErrorCode fileStreamErrorCode;
+        private long streamSize;
+        private bool compressedData;
 
-        public NetPackageMVirusStreamError Setup(byte _streamId, NetStreamException ex)
+        public NetPackageMVirusStreamCreated Setup(byte _streamId, long _streamSize, bool _compressedData)
         {
-            fileStreamErrorCode = ex.ErrorCode;
+            compressedData = _compressedData;
             streamId = _streamId;
+            streamSize = _streamSize;
             return this;
         }
 
         public override void read(PooledBinaryReader _reader)
         {
             streamId = _reader.ReadByte();
-            fileStreamErrorCode = (StreamErrorCode)_reader.ReadByte();
+            streamSize = _reader.ReadInt64();
+            compressedData = _reader.ReadBoolean();
         }
 
         public override void write(PooledBinaryWriter _writer)
         {
             base.write(_writer);
             _writer.Write(streamId);
-            _writer.Write((byte)fileStreamErrorCode);
+            _writer.Write(streamSize);
+            _writer.Write(compressedData);
         }
 
         public override int GetLength()
         {
-            return 2;
+            return 10;
         }
 
         public override void ProcessPackage(World _world, GameManager _callbacks)
         {
-            ServerModManager.netTransferManager?.HandleStreamError(Sender, streamId, fileStreamErrorCode);
+            API.incomingStreamHandler.HandleStreamOpen(streamId, streamSize, compressedData);
         }
-
     }
 }

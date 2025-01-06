@@ -1,5 +1,6 @@
 ﻿using MVirus.Shared;
 using MVirus.Shared.NetPackets;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -36,23 +37,43 @@ namespace MVirus.Server
             windowSize = (clientReaded + clientBuffer) - sendedCount;
         }
 
-        public async Task Update()
+        public int GetAvialableClientStreamWriteSize()
         {
-            //var connection = client.netConnection[0] as NetConnectionSimple;
-            //var streamPosition = connection.reliableSendStreamWriter.BaseStream.Position;
+            var connection = client.netConnection[0] as NetConnectionSimple;
 
-            while (windowSize > 512 && !finished)
-                await SendDataToClient();
+            int size = 0;
+            var list = new List<NetPackage>();
+
+            connection.GetPackages(list);
+
+            foreach (var package in list)
+                size += package.GetLength();
+
+            return 2097152 - size;
         }
 
-        private async Task SendDataToClient()
+        public async Task Update()
+        {
+            var avialableSize = GetAvialableClientStreamWriteSize();
+
+            while (windowSize > 512 && !finished && avialableSize > 2097152 / 2)
+            {
+                var writedCount = await SendDataToClient();
+                if (writedCount == 0)
+                    break;
+
+                avialableSize -= writedCount; 
+            }
+        }
+
+        private async Task<int> SendDataToClient()
         {
             int maxReadLen = (int)System.Math.Min(buffer.Length, windowSize);
             var readedCount = await stream.ReadAsync(buffer, 0, maxReadLen);
             if (readedCount == 0)
             {
                 finished = true;
-                return;
+                return 0;
             }
 
             windowSize -= readedCount;
@@ -60,6 +81,8 @@ namespace MVirus.Server
 
             var req = NetPackageManager.GetPackage<NetPackageMVirusStreamData>().Setup(streamId, buffer, readedCount);
             client.SendPackage(req);
+
+            return readedCount;
         }
     }
 }

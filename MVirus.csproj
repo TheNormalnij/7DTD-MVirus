@@ -75,9 +75,10 @@
     <Compile Include="src\Server\NetStreams\FileStreamOptionalCompressed.cs" />
     <Compile Include="src\Server\NetStreams\OutgoingStreamStore.cs" />
     <Compile Include="src\Shared\MVLog.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamClosed.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamData.cs" />
     <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamSync.cs" />
-    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamUpdate.cs" />
+    <Compile Include="src\Shared\NetPackets\NetPackageMVirusStreamCreated.cs" />
     <Compile Include="src\Shared\NetStreams\NetStreamException.cs" />
     <Compile Include="src\Client\RingBuffer.cs" />
     <Compile Include="src\Client\Transports\ContentLoadingTransportHttp.cs" />

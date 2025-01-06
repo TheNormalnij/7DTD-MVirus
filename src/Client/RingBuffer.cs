@@ -50,20 +50,17 @@ namespace MVirus.Client
             if (nextHead >= buffer.Length)
             {
                 nextHead = nextHead - buffer.Length;
+                long firtsCopyCount = buffer.Length - head;
 
-                for (long i = head; i <  buffer.Length; i++)
-                    buffer[i] = items[i - head];
-
-                var writted = buffer.Length - head;
-                for (long i = 0; i < nextHead; i++)
-                    buffer[i] = items[writted + i];
+                Array.Copy(items, 0, buffer, head, firtsCopyCount);
+                Array.Copy(items, firtsCopyCount, buffer, 0, items.Length - firtsCopyCount);
             } else
             {
-                items.CopyTo(buffer, head);
+                Array.Copy(items, 0, buffer, head, items.Length);
             }
 
             head = nextHead;
-            size = size + items.Length;
+            size += items.Length;
         }
 
         public void Clear()
@@ -89,17 +86,18 @@ namespace MVirus.Client
 
             if (head > tail)
             {
-                for (long i = 0; i < count; i++)
-                    array[arrayIndex + i] = buffer[tail + i];
+                Array.Copy(buffer, tail, array, arrayIndex, count);
             } else
             {
                 long firstSize = buffer.Length - tail;
-                for (long i = 0; i < firstSize; i++)
-                    array[arrayIndex + i] = buffer[tail + i];
+                Array.Copy(buffer, tail, array, arrayIndex, Math.Min(firstSize, count));
 
                 count -= firstSize;
-                for (long i = 0; i < count; i++)
-                    array[arrayIndex + i + firstSize] = buffer[i];
+
+                if (count <= 0)
+                    return;
+
+                Array.Copy(buffer, 0, array, arrayIndex + firstSize, count);
             }
         }
 

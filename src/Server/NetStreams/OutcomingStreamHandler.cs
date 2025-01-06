@@ -32,14 +32,18 @@ namespace MVirus.Server
                 return;
             }
 
+            MVLog.Debug($"New stream request {clientRequestId} {path}");
+
             try
             {
                 var req = streamSource.CreateStream(path);
                 var outStreamHandler = new OutcomingNetStreamHandler(sender, req.stream, clientRequestId);
                 activeRequest.Add(sender, outStreamHandler);
-                SendStreamCreated(sender, outStreamHandler);
-            } catch (NetStreamException e) {
-                SendStreamError(sender, clientRequestId, e);
+                SendStreamCreated(sender, clientRequestId, req);
+            } catch (NetStreamException ex)
+            {
+                MVLog.Error("HandleStreamRequest NetStreamException: " + ex.Message);
+                SendStreamError(sender, clientRequestId, ex);
             } catch (Exception ex)
             {
                 MVLog.Error("Error handling client stream request: " + ex.Message);
@@ -55,6 +59,7 @@ namespace MVirus.Server
 
         public void HandleSyncData(ClientInfo sender, List<NetStreamSyncData> data)
         {
+            MVLog.Debug($"Sync data: {data.Count}");
             foreach (NetStreamSyncData syncData in data)
             {
                 var handler = activeRequest.GetClientStream(sender, syncData.streamId);
@@ -76,19 +81,22 @@ namespace MVirus.Server
             client.SendPackage(req);
         }
 
-        private void SendStreamCreated(ClientInfo client, OutcomingNetStreamHandler streamHandler)
+        private void SendStreamCreated(ClientInfo client, byte streamId, RequestedStreamParams streamParams)
         {
-            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamUpdate>().SetupCreate(streamHandler.streamId, streamHandler.stream.Length);
+            MVLog.Debug("Created stream size: " + streamParams.stream.Length);
+            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamCreated>().Setup(streamId, streamParams.stream.Length, streamParams.compressed);
             client.SendPackage(req);
         }
 
         private void CloseClientStream(ClientInfo client, byte streamId, bool sendMessage = true)
         {
+            MVLog.Debug($"Close stream {streamId}");
+
             var stream = activeRequest.GetClientStream(client, streamId);
             stream.Close();
             if (sendMessage)
             {
-                var req = NetPackageManager.GetPackage<NetPackageMVirusStreamUpdate>().SetupClose(streamId);
+                var req = NetPackageManager.GetPackage<NetPackageMVirusStreamClosed>().Setup(streamId);
                 client.SendPackage(req);
             }
 
@@ -123,7 +131,7 @@ namespace MVirus.Server
                 foreach (var handler in removeList)
                     CloseClientStream(handler.client, handler.streamId, true);
 
-                await Task.Delay(5);
+                await Task.Delay(50);
             }
         }
 

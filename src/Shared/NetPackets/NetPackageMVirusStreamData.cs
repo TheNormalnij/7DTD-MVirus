@@ -1,9 +1,10 @@
-﻿namespace MVirus.Shared.NetPackets
+﻿using System;
+
+namespace MVirus.Shared.NetPackets
 {
     public class NetPackageMVirusStreamData : NetPackage
     {
         public override bool AllowedBeforeAuth => true;
-        public override bool FlushQueue => true;
 
         private byte streamId;
         private byte[] data;
@@ -11,7 +12,8 @@
 
         public NetPackageMVirusStreamData Setup(byte streamId, byte[] data, int count)
         {
-            this.data = data;
+            this.data = new byte[count];
+            Array.Copy(data, this.data, count);
             this.streamId = streamId;
             this.count = count;
             return this;

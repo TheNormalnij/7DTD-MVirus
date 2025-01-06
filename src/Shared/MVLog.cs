@@ -41,5 +41,20 @@ namespace MVirus.Shared
         {
             Error(string.Format(_format, _values));
         }
+
+        public static void Debug(string message)
+        {
+            #if DEBUG
+            Log.Warning(PREFIX + "[Debug] " + message);
+            #endif
+        }
+
+        public static void Debug(string _format, params object[] _values)
+        {
+            #if DEBUG
+            Debug(string.Format(_format, _values));
+            #endif
+        }
+
     }
 }

@@ -15,10 +15,13 @@ namespace MVirus.Client.NetStreams
         public override long Length => TotalCount;
         public override long Position { get => readedCount; set => throw new NotImplementedException(); }
 
+        public bool GzipCompressed { get; set; } = false;
         public int BufferAvialableSize => buffer.FreeSize;
-        public long SendedCount { get; private set; }
+        public long SendedCount { get; private set; } = 0;
         public long TotalCount { get; private set; } = -1;
         private long readedCount = 0;
+
+        private readonly object dataLock = new object();
 
         private Exception exception = null;
 
@@ -42,23 +45,30 @@ namespace MVirus.Client.NetStreams
             if (currentReading != null)
                 throw new Exception("Reading in progress");
 
-            if (SendedCount == TotalCount)
+            if (readedCount == TotalCount)
                 return Task.FromResult(0);
 
-            if (exception != null)
+            if (exception != null && (TotalCount == -1 || readedCount == TotalCount))
                 return Task.FromException<int>(exception);
 
-            currentReading = new StreamReading
+            var newReqding = new StreamReading
             {
                 destination = buffer,
                 offset = offset,
                 count = count,
-                taskSource = new TaskCompletionSource<int>()
+                taskSource = new TaskCompletionSource<int>(),
             };
 
-            DoReading();
+            cancellationToken.Register(DoCancellation);
 
-            return currentReading.taskSource.Task;
+            currentReading = newReqding;
+
+            lock (dataLock)
+            {
+                DoReading();
+            }
+
+            return newReqding.taskSource.Task;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -78,9 +88,12 @@ namespace MVirus.Client.NetStreams
 
         public void RecievedData(byte[] data)
         {
-            buffer.Add(data);
-            SendedCount += data.Length;
-            DoReading();
+            lock (dataLock)
+            {
+                buffer.Add(data);
+                SendedCount += data.Length;
+                DoReading();
+            }
         }
 
         private void DoReading()
@@ -88,17 +101,26 @@ namespace MVirus.Client.NetStreams
             if (buffer.Count == 0)
                 return;
 
+            var reading = currentReading;
             if (currentReading == null || currentReading.taskSource.Task.IsCompleted)
                 return;
 
-            var transferBytes = Math.Min(currentReading.count, buffer.Count);
+            currentReading = null;
 
-            buffer.CopyTo(currentReading.destination, currentReading.offset, transferBytes);
+            var transferBytes = Math.Min(reading.count, buffer.Count);
+
+            buffer.CopyTo(reading.destination, reading.offset, transferBytes);
+
             buffer.Discard(transferBytes);
-            currentReading.taskSource.SetResult(transferBytes);
+
+            reading.taskSource.SetResult(transferBytes);
 
             readedCount += transferBytes;
-            currentReading = null;
+        }
+
+        private void DoCancellation()
+        {
+            SetException(new TaskCanceledException());
         }
 
         public void SetException(Exception ex)

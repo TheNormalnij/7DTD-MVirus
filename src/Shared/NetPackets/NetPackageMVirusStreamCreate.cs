@@ -11,7 +11,6 @@ namespace MVirus.Shared.NetPackets
     public class NetPackageMVirusStreamCreate : NetPackage
     {
         public override bool AllowedBeforeAuth => true;
-        public override bool FlushQueue => true;
 
         private string filePath;
         private byte streamId;
@@ -38,6 +37,8 @@ namespace MVirus.Shared.NetPackets
             _writer.Write(filePath);
             _writer.Write(streamId);
             _writer.Write((byte)streamType);
+
+            MVLog.Debug("Write create request");
         }
 
         public override int GetLength()

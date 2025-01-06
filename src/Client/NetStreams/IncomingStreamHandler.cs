@@ -2,8 +2,8 @@
 using MVirus.Shared;
 using MVirus.Shared.NetPackets;
 using MVirus.Shared.NetStreams;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace MVirus.Client.NetStreams
@@ -12,6 +12,8 @@ namespace MVirus.Client.NetStreams
     {
         private const long STREAM_POOL_SIZE = 10;
         private readonly NetStreamRequest[] activeRequests = new NetStreamRequest[STREAM_POOL_SIZE];
+        private int lastStreamId = -1;
+
         private bool streamsSynced = false;
 
         /// <summary>
@@ -19,11 +21,13 @@ namespace MVirus.Client.NetStreams
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public Task<Stream> CreateFileStream(string path)
+        public Task<IncomingNetStream> CreateFileStream(string path)
         {
-            var taskSource = new TaskCompletionSource<Stream>();
+
+            var taskSource = new TaskCompletionSource<IncomingNetStream>();
 
             var streamId = GetNextStreamId();
+            MVLog.Debug($"Create new stream {streamId} {path}");
 
             activeRequests[streamId] = new NetStreamRequest
             {
@@ -40,15 +44,27 @@ namespace MVirus.Client.NetStreams
 
         private byte GetNextStreamId()
         {
-            for (int i = 0; i < activeRequests.Length; i++) {
+            for (int i = lastStreamId + 1; i < activeRequests.Length; i++) {
                 if (activeRequests[i] == null)
+                {
+                    lastStreamId = i;
                     return (byte)i;
+                }
+            }
+            for (int i = 0; i < lastStreamId; i++)
+            {
+                if (activeRequests[i] == null)
+                {
+                    lastStreamId = i;
+                    return (byte)i;
+                }
             }
             throw new NetStreamException("Stream limit reached");
         }
 
         public void HandleIncomingData(byte streamId, byte[] data)
         {
+            MVLog.Debug($"Got data: {streamId} {data.Length}");
             var request = activeRequests[streamId];
             if (request == null)
             {
@@ -56,30 +72,41 @@ namespace MVirus.Client.NetStreams
                 return;
             }
 
+            if (request.status != StreamStatus.READING)
+            {
+                MVLog.Debug($"Invalid state {streamId}");
+                SendStreamError(streamId, StreamErrorCode.INVALID_STATE);
+                return;
+            }
+
             request.stream.RecievedData(data);
 
-            if (request.stream.IsAllDataRecieved())
+/*            if (request.stream.IsAllDataRecieved())
             {
                 request.status = StreamStatus.FINISHED;
-            }
+            }*/
         }
 
-        public void HandleStreamOpen(byte streamId, long streamSize)
+        public void HandleStreamOpen(byte streamId, long streamSize, bool compressed)
         {
+            MVLog.Debug($"Stream oppened: {streamId} compressed {compressed}" );
             var request = activeRequests[streamId];
             if (request == null)
             {
+                MVLog.Debug($"Not found {streamId}");
                 SendStreamError(streamId, StreamErrorCode.NOT_FOUND);
                 return;
             }
 
             if (request.status != StreamStatus.CREATING)
             {
+                MVLog.Debug($"Invalid state {streamId}");
                 SendStreamError(streamId, StreamErrorCode.INVALID_STATE);
                 return;
             }
 
             request.stream = new IncomingNetStream();
+            request.stream.GzipCompressed = compressed;
             request.stream.SetLength(streamSize);
             request.creatingTask.SetResult(request.stream);
             request.status = StreamStatus.READING;
@@ -90,6 +117,8 @@ namespace MVirus.Client.NetStreams
 
         public void HandleStreamClose(byte streamId)
         {
+            MVLog.Debug("Stream closed: " + streamId);
+
             var request = activeRequests[streamId];
             if (request == null)
             {
@@ -123,6 +152,8 @@ namespace MVirus.Client.NetStreams
 
         public void HandleError(byte streamId, StreamErrorCode code)
         {
+            MVLog.Debug($"Stream error: {0} {1}", streamId, code.ToString());
+
             var stream = activeRequests[streamId];
             if (stream == null)
             {
@@ -149,10 +180,10 @@ namespace MVirus.Client.NetStreams
         {
             var syncData = new List<NetStreamSyncData>();
 
-            for (int streamId = 0; streamId < activeRequests.Length; streamId++)
+            for (int streamId = 0; streamId < STREAM_POOL_SIZE; streamId++)
             {
                 var req = activeRequests[streamId];
-                if (req != null)
+                if (req != null && req.status == StreamStatus.READING)
                 {
                     syncData.Add(new NetStreamSyncData
                     {
@@ -172,12 +203,14 @@ namespace MVirus.Client.NetStreams
 
         private void StartStreamSyncing()
         {
+            MVLog.Debug("Start stream syncing loop");
             streamsSynced = true;
             Task.Run(DoStreamSyncingLoop);
         }
 
         private void StopStreamSyncing()
         {
+            MVLog.Debug("Stop stream syncing loop");
             streamsSynced = false;
         }
 
@@ -185,13 +218,18 @@ namespace MVirus.Client.NetStreams
         {
             while (streamsSynced)
             {
-                SyncStreams();
-                if (!HasActiveStreams())
+                try
                 {
-                    StopStreamSyncing();
-                    return;
+                    SyncStreams();
+                    if (!HasActiveStreams())
+                    {
+                        StopStreamSyncing();
+                        return;
+                    }
+                } catch (Exception ex) {
+                    MVLog.Exception(ex);
                 }
-                await Task.Delay(50);
+                await Task.Delay(200);
             }
         }
 
@@ -199,7 +237,7 @@ namespace MVirus.Client.NetStreams
         {
             foreach (var req in activeRequests)
             {
-                if (req.status == StreamStatus.READING)
+                if (req != null && (req.status == StreamStatus.READING || req.status == StreamStatus.CREATING))
                     return true;
             }
 
@@ -219,6 +257,6 @@ namespace MVirus.Client.NetStreams
     {
         public IncomingNetStream stream;
         public StreamStatus status;
-        public TaskCompletionSource<Stream> creatingTask;
+        public TaskCompletionSource<IncomingNetStream> creatingTask;
     }
 }

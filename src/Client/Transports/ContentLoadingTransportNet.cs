@@ -1,4 +1,5 @@
-﻿using MVirus.Shared;
+﻿using MVirus.Client.NetStreams;
+using MVirus.Shared;
 using System;
 using System.IO;
 using System.Threading;
@@ -15,19 +16,20 @@ namespace MVirus.Client.Transports
 
         public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
         {
-            MVLog.Out("Download file: " + fileInfo.Path);
-
             Stream fileStream = null;
-            Stream netStream = null;
+            IncomingNetStream netStream = null;
             try
             {
                 netStream = await API.incomingStreamHandler.CreateFileStream(fileInfo.Path);
 
                 fileStream = File.Open(Path.Combine(outPath, fileInfo.Path), FileMode.Create);
 
-                await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken, progressCounter);
-
-                MVLog.Out("Download complecte: " + fileInfo.Path);
+                if (netStream.GzipCompressed)
+                    await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
+                                                                        progressCounter);
+                else
+                    await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
+                                                                    progressCounter);
             }
             finally
             {
