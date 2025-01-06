@@ -1,5 +1,6 @@
 ﻿
 using HarmonyLib;
+using MVirus.Client.NetStreams;
 using MVirus.Server;
 using System.IO;
 
@@ -10,6 +11,7 @@ namespace MVirus
         private readonly Harmony harmony = new Harmony("de.thenormalnij.mvirus");
         public static Mod instance = null;
 
+        public static IncomingStreamHandler incomingStreamHandler = null;
         public static string clientCachePath; 
 
         // Entrypoint
@@ -24,6 +26,9 @@ namespace MVirus
             {
                 ModEvents.GameStartDone.RegisterHandler(ServerModManager.OnServerGameStarted);
                 ModEvents.GameShutdown.RegisterHandler(ServerModManager.OnServerGameStopped);
+            } else
+            {
+                incomingStreamHandler = new IncomingStreamHandler();
             }
         }
     }

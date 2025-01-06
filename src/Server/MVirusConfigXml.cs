@@ -26,7 +26,7 @@ namespace MVirus.Server
                         {
                             var value = ushort.Parse(item.GetAttribute("value"));
 
-                            if (value > ((ushort)RemoteFilesSource.REMOTE_HTTP))
+                            if (value > ((ushort)RemoteFilesSource.GAME_CONNECTION))
                                 throw new Exception("Invalid FileTransferType config");
 
                             MVirusConfig.RemoteFilesSource = (RemoteFilesSource)value;

@@ -13,7 +13,6 @@ namespace MVirus.Shared.NetPackets
     public class NetPackageMVirusHello : NetPackage
     {
         // Package config
-        public override bool Compress => true;
         public override bool AllowedBeforeAuth => true;
         public override bool FlushQueue => true;
         public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;
@@ -48,7 +47,7 @@ namespace MVirus.Shared.NetPackets
                     remoteHttpServer = _reader.ReadString();
                     break;
                 case RemoteFilesSource.GAME_CONNECTION:
-                    throw new NotImplementedException("GAME_CONNECTION is not implemented");
+                    break;
                 default:
                     throw new Exception("Invalid remote file source");
             }
@@ -70,7 +69,7 @@ namespace MVirus.Shared.NetPackets
                     _writer.Write(remoteHttpServer);
                     break;
                 case RemoteFilesSource.GAME_CONNECTION:
-                    throw new NotImplementedException("GAME_CONNECTION is not implemented");
+                    break;
                 default:
                     throw new Exception("Invalid remote file source");
             }
@@ -85,14 +84,20 @@ namespace MVirus.Shared.NetPackets
 
             if (MVirusProtocolVersion != 0)
             {
-                Log.Warning("[MVirus] Protocol version missmatch");
+                MVLog.Warning("Protocol version missmatch");
                 connectionManager.Disconnect();
             }
 
             if (MVirusMinimalBuild > Version.VERSION)
             {
-                Log.Warning("[MVirus] Server requests MVirus " + MVirusMinimalBuild + ". Curent version: " + Version.VERSION);
+                MVLog.Warning("Server requests MVirus " + MVirusMinimalBuild + ". Curent version: " + Version.VERSION);
                 connectionManager.Disconnect();
+            }
+
+            if (remoteFilesSource == RemoteFilesSource.GAME_CONNECTION)
+            {
+                RemoteContentManager.RequestContent();
+                return;
             }
 
             RemoteHttpInfo remoteHttp;
