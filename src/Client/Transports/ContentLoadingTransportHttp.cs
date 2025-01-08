@@ -43,8 +43,14 @@ namespace MVirus.Client
                 fileStream = File.Open(Path.Combine(outPath, fileInfo.Path), FileMode.Create);
 
                 if (response.Content.Headers.ContentEncoding.FirstOrDefault() == "gzip")
+                {
                     await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                         progressCounter);
+
+                    // Server returns full file size when active compression is used.
+                    if (fileStream.Length < fileInfo.Size)
+                        progressCounter.Invoke((int)(fileInfo.Size - fileStream.Length));
+                }
                 else
                     await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);

@@ -1,6 +1,4 @@
-﻿
-using MVirus.Shared;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -102,7 +100,7 @@ namespace MVirus.Client.NetStreams
                 return;
 
             var reading = currentReading;
-            if (currentReading == null || currentReading.taskSource.Task.IsCompleted)
+            if (reading == null || reading.taskSource.Task.IsCompleted)
                 return;
 
             currentReading = null;
@@ -137,6 +135,22 @@ namespace MVirus.Client.NetStreams
         public bool IsAllDataRecieved()
         {
             return TotalCount <= SendedCount;
+        }
+
+        public void Finished()
+        {
+            TotalCount = SendedCount;
+            lock (dataLock)
+            {
+                var reading = currentReading;
+                if (reading == null || reading.taskSource.Task.IsCompleted)
+                    return;
+
+                if (readedCount != TotalCount)
+                    return;
+
+                reading.taskSource.SetResult(0);
+            }
         }
     }
 

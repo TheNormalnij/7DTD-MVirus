@@ -52,7 +52,7 @@ namespace MVirus.Client
 
             if (!filesToLoad.IsFileListSafe())
             {
-                Log.Error("[MVirus] Unsafe file path. Abort");
+                MVLog.Error("Unsafe file path. Abort");
                 State = LoadingState.CANCELED;
                 return;
             }
@@ -70,14 +70,14 @@ namespace MVirus.Client
             catch (OperationCanceledException)
             {
                 // Doesn't work. Why?
-                Log.Out("[MVirus] Canceled in CacheScanner.FilterLocalFiles");
+                MVLog.Out("Canceled in CacheScanner.FilterLocalFiles");
                 State = LoadingState.CANCELED;
                 return;
             }
             catch (Exception ex)
             {
-                Log.Exception(ex);
-                Log.Error("[MVirus] Cannot handle cache. Abort");
+                MVLog.Exception(ex);
+                MVLog.Error("Cannot handle cache. Abort");
                 State = LoadingState.CANCELED;
                 return;
             }
@@ -98,19 +98,19 @@ namespace MVirus.Client
                 catch (Exception ex)
                 {
                     MVLog.Exception(ex);
-                    MVLog.Error("[MVirus] DownloadFileAsync error: " + ex.Message);
+                    MVLog.Error("DownloadFileAsync error: " + ex.Message);
                     StopDownloading();
                 }
 
                 if (State == LoadingState.CANCELING)
                 {
                     State = LoadingState.CANCELED;
-                    Log.Out("[MVirus] Downloading canceled");
+                    MVLog.Out("Downloading canceled");
                     return;
                 }
             }
 
-            Log.Out("[MVirus] All download tasks complected");
+            MVLog.Out("All download tasks complected");
 
             State = LoadingState.COMPLECTED;
         }

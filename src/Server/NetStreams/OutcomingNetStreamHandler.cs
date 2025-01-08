@@ -1,7 +1,6 @@
-﻿using MVirus.Shared;
+﻿using MVirus.Server.NetStreams;
 using MVirus.Shared.NetPackets;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace MVirus.Server
@@ -12,16 +11,15 @@ namespace MVirus.Server
         private long windowSize = 1024 * 50;
 
         private readonly byte[] buffer;
-        public readonly Stream stream;
+        public readonly RequestedStreamParams req;
         public readonly ClientInfo client;
         public readonly byte streamId;
         public bool finished;
 
-
-        public OutcomingNetStreamHandler(ClientInfo _client, Stream sourceStream, byte clientId)
+        public OutcomingNetStreamHandler(ClientInfo _client, RequestedStreamParams _req, byte clientId)
         {
             client = _client;
-            stream = sourceStream;
+            req = _req;
             streamId = clientId;
             buffer = new byte[1024 * 50];
             finished = false;
@@ -29,7 +27,7 @@ namespace MVirus.Server
         }
 
         public void Close() {
-            stream.Close();
+            req.Close();
         }
 
         public void UpdateWindowSize(long clientReaded, int clientBuffer)
@@ -69,7 +67,7 @@ namespace MVirus.Server
         private async Task<int> SendDataToClient()
         {
             int maxReadLen = (int)System.Math.Min(buffer.Length, windowSize);
-            var readedCount = await stream.ReadAsync(buffer, 0, maxReadLen);
+            var readedCount = await req.stream.ReadAsync(buffer, 0, maxReadLen);
             if (readedCount == 0)
             {
                 finished = true;
@@ -79,8 +77,8 @@ namespace MVirus.Server
             windowSize -= readedCount;
             sendedCount += readedCount;
 
-            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamData>().Setup(streamId, buffer, readedCount);
-            client.SendPackage(req);
+            var packet = NetPackageManager.GetPackage<NetPackageMVirusStreamData>().Setup(streamId, buffer, readedCount);
+            client.SendPackage(packet);
 
             return readedCount;
         }

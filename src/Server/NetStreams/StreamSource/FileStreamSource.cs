@@ -21,10 +21,13 @@ namespace MVirus.Server.NetStreams
 
             try
             {
+                var stream = File.OpenRead(rootPath + "/" + name);
                 return new RequestedStreamParams
                 {
-                    stream = File.OpenRead(rootPath + "/" + name),
+                    stream = stream,
                     compressed = false,
+                    length = stream.Length,
+                    Close = () => stream.Close()
                 };
             } catch (FileNotFoundException)
             {

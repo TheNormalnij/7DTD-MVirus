@@ -105,8 +105,10 @@ namespace MVirus.Client.NetStreams
                 return;
             }
 
-            request.stream = new IncomingNetStream();
-            request.stream.GzipCompressed = compressed;
+            request.stream = new IncomingNetStream
+            {
+                GzipCompressed = compressed
+            };
             request.stream.SetLength(streamSize);
             request.creatingTask.SetResult(request.stream);
             request.status = StreamStatus.READING;
@@ -115,7 +117,7 @@ namespace MVirus.Client.NetStreams
                 StartStreamSyncing();
         }
 
-        public void HandleStreamClose(byte streamId)
+        public void HandleStreamClose(byte streamId, bool finished)
         {
             MVLog.Debug("Stream closed: " + streamId);
 
@@ -135,7 +137,11 @@ namespace MVirus.Client.NetStreams
                     }
                 case StreamStatus.READING:
                     {
-                        request.stream.SetException(new NetStreamException("Closed by server"));
+                        if (finished)
+                            request.stream.Finished();
+                        else
+                            request.stream.SetException(new NetStreamException("Closed by server"));
+
                         break;
                     }
                 case StreamStatus.CLOSING:

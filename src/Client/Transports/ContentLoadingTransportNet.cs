@@ -1,5 +1,4 @@
 ﻿using MVirus.Client.NetStreams;
-using MVirus.Shared;
 using System;
 using System.IO;
 using System.Threading;
@@ -25,8 +24,14 @@ namespace MVirus.Client.Transports
                 fileStream = File.Open(Path.Combine(outPath, fileInfo.Path), FileMode.Create);
 
                 if (netStream.GzipCompressed)
+                {
                     await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                         progressCounter);
+
+                    // Server returns full file size when active compression is used.
+                    if (netStream.TotalCount < fileInfo.Size)
+                        progressCounter.Invoke((int)(fileInfo.Size - netStream.TotalCount));
+                }
                 else
                     await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);

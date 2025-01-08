@@ -13,7 +13,22 @@
 	<!-- Port for internal HTTP file server -->
 	<property name="HttpPort" value="24000"/>
 
-	<!-- Enable compression for mod files -->
-	<property name="ModCompression" value="true"/>
+	<!-- Enable active compression for mod files.
+		 Increases CPU usage but saves disk space
+	-->
+	<property name="ActiveCompression" value="false"/>
+
+	<!-- Enable static compression for mod files.
+	     The mod will create *.gz files in the http cache folder.
+		 Precompressed files are compabiable with the ngx_http_gzip_static_module nginx module
+		 This property disables ActiveCompression
+	-->
+	<property name="StaticCompression" value="true"/>
+
+	<!-- Cache remote files.
+		 Doubles disk usage, but allows edit mods at runtime
+	-->
+	<property name="CacheAllRemoteFiles" value="true"/>
+
 			  
 </MVirusServerSettings>

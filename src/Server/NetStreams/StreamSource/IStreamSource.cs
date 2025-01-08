@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace MVirus.Server.NetStreams
 {
@@ -11,5 +12,7 @@ namespace MVirus.Server.NetStreams
     {
         public Stream stream;
         public bool compressed;
+        public long length;
+        public Action Close;
     }
 }
