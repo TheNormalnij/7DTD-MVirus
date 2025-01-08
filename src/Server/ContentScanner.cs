@@ -8,6 +8,14 @@ namespace MVirus.Server
 {
     internal class ContentScanner
     {
+        private static HashSet<string> ignoredMods = new HashSet<string> {
+            "MVirus",
+            "TFP_Harmony",
+            "TFP_CommandExtensions",
+            "TFP_MapRendering",
+            "TFP_WebServer",
+        };
+
         public static readonly List<ServerModInfo> loadedMods = new List<ServerModInfo>();
         public static string cachePath;
 
@@ -21,7 +29,7 @@ namespace MVirus.Server
 
             foreach (var mod in ModManager.GetLoadedMods())
             {
-                if (mod == thisMod || mod.Name == "TFP_Harmony")
+                if (ignoredMods.Contains(mod.Name))
                     continue;
 
                 var modDirectoryName = Path.GetFileName(mod.Path);
@@ -33,10 +41,40 @@ namespace MVirus.Server
                 var files = new List<ServerFileInfo>();
 
                 var startCut = mod.Path.Length + 1;
-                CacheDirectory(files, startCut, mod.Path, modCachePath);
+                CacheRootDirectory(files, startCut, mod.Path, modCachePath);
 
                 var modInfo = new ServerModInfo { Name = mod.Name, DirName = modDirectoryName, Files = files.ToArray() };
                 loadedMods.Add(modInfo);
+            }
+        }
+
+        private static void CacheRootDirectory(List<ServerFileInfo> outList, int startCut, string path, string targetPath)
+        {
+            if (!SdDirectory.Exists(path))
+                return;
+
+            if (SdDirectory.Exists(targetPath))
+                SdDirectory.Delete(targetPath, true);
+
+            if (MVirusConfig.CacheAllRemoteFiles)
+                SdDirectory.CreateDirectory(targetPath);
+
+            foreach (var dir in SdDirectory.GetDirectories(path))
+            {
+                var dirName = Path.GetFileName(dir);
+                if (dirName == "Config")
+                    continue;
+
+                CacheDirectory(outList, startCut, dir, CombineHttpPath(targetPath, dirName));
+            }
+
+            foreach (var file in SdDirectory.GetFiles(path))
+            {
+                var name = Path.GetFileName(file);
+                if (name == "ModInfo.xml")
+                    continue;
+
+                ProcessFile(outList, startCut, targetPath, file);
             }
         }
 
@@ -52,24 +90,25 @@ namespace MVirus.Server
                 SdDirectory.CreateDirectory(targetPath);
 
             foreach (var dir in SdDirectory.GetDirectories(path))
-            {
                 CacheDirectory(outList, startCut, dir, CombineHttpPath(targetPath, Path.GetFileName(dir)));
-            }
 
             foreach (var file in SdDirectory.GetFiles(path))
-            {
-                if (!PathUtils.IsAllowedModFileExtension(file))
-                    continue;
+                ProcessFile(outList, startCut, targetPath, file);
+        }
 
-                var targetFilePath = CombineHttpPath(targetPath, Path.GetFileName(file));
-                var outPath = CacheFile(file, targetFilePath);
+        private static void ProcessFile(List<ServerFileInfo> outList, int startCut, string targetPath, string file)
+        {
+            if (!PathUtils.IsAllowedModFileExtension(file))
+                return;
 
-                var relativePath = file.Substring(startCut).Replace('\\', '/');
-                var size = new FileInfo(outPath).Length;
-                var hash = Crc32.CalculateFileCrc32(file);
+            var targetFilePath = CombineHttpPath(targetPath, Path.GetFileName(file));
+            var outPath = CacheFile(file, targetFilePath);
 
-                outList.Add(new ServerFileInfo(relativePath, size, hash));
-            }
+            var relativePath = file.Substring(startCut).Replace('\\', '/');
+            var size = new FileInfo(outPath).Length;
+            var hash = Crc32.CalculateFileCrc32(file);
+
+            outList.Add(new ServerFileInfo(relativePath, size, hash));
         }
 
         private static string CacheFile(string filePath, string targetFilePath)
