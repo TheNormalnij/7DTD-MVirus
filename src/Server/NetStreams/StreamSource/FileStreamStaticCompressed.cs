@@ -4,11 +4,11 @@ using System.IO;
 
 namespace MVirus.Server.NetStreams
 {
-    public class FileStreamOptionalCompressed : IStreamSource
+    public class FileStreamStaticCompressed : IStreamSource
     {
         private readonly string rootPath;
 
-        public FileStreamOptionalCompressed(string rootPath)
+        public FileStreamStaticCompressed(string rootPath)
         {
             this.rootPath = rootPath;
         }
@@ -20,20 +20,14 @@ namespace MVirus.Server.NetStreams
 
             try
             {
-                var req = new RequestedStreamParams();
-                var uncompressedPath = rootPath + "/" + name;
-
-                try
+                var stream = File.OpenRead(rootPath + "/" + name + ".gz");
+                return new RequestedStreamParams
                 {
-                    req.stream = File.OpenRead(uncompressedPath + ".gz");
-                    req.compressed = true;
-                } catch (FileNotFoundException)
-                {
-                    req.stream = File.OpenRead(uncompressedPath);
-                    req.compressed = false;
-                }
-
-                return req;
+                    stream = stream,
+                    compressed = true,
+                    length = stream.Length,
+                    Close = () => stream.Close()
+                };
             }
             catch (FileNotFoundException)
             {

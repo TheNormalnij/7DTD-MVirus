@@ -30,10 +30,11 @@ namespace MVirus.Shared.NetPackets
             for (int i = 0; i < count; i++)
             {
                 var name = _reader.ReadString();
+                var dirName = _reader.ReadString();
                 var filesCount = _reader.ReadUInt16();
 
                 var files = new ServerFileInfo[filesCount];
-                serverMods[i] = new ServerModInfo(name, files);
+                serverMods[i] = new ServerModInfo { Name = name, DirName = dirName, Files = files };
 
                 for (int j = 0; j < filesCount; j++)
                     files[j] = new ServerFileInfo(_reader.ReadString(), _reader.ReadInt64(), _reader.ReadInt32());
@@ -48,6 +49,7 @@ namespace MVirus.Shared.NetPackets
             foreach (var item in serverMods)
             {
                 _writer.Write(item.Name);
+                _writer.Write(item.DirName);
                 _writer.Write((ushort)item.Files.Length);
                 foreach (var file in item.Files)
                 {
@@ -68,7 +70,7 @@ namespace MVirus.Shared.NetPackets
             var length = 2;
             foreach (var item in serverMods)
             {
-                length += item.Name.Length + 2;
+                length += item.Name.Length + item.DirName.Length + 2;
                 foreach (var fileInfo in item.Files)
                 {
                     length += fileInfo.Path.Length + 12;

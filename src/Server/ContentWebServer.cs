@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using MVirus.Server.NetStreams;
 using MVirus.Shared.NetStreams;
 using MVirus.Shared;
-using System.Xml.Linq;
 
 namespace MVirus.Server
 {
@@ -87,7 +86,7 @@ namespace MVirus.Server
                 return;
             } catch (Exception ex)
             {
-                Log.Error(ex.Message);
+                MVLog.Error(ex.Message);
                 await SendError(context.Response, HttpStatusCode.InternalServerError);
                 return;
             }
@@ -96,7 +95,7 @@ namespace MVirus.Server
                 //Adding permanent http response headers
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 context.Response.ContentType = "application/octet-stream";
-                context.Response.ContentLength64 = streamRequest.stream.Length;
+                context.Response.SendChunked = true;
                 
                 context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
                 context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
@@ -108,10 +107,10 @@ namespace MVirus.Server
             }
             catch (Exception ex)
             {
-                Log.Exception(ex);
+                MVLog.Exception(ex);
             }
 
-            streamRequest.stream.Close();
+            streamRequest.Close();
             context.Response.OutputStream.Close();
         }
 

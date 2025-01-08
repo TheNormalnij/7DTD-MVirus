@@ -37,7 +37,7 @@ namespace MVirus.Server
             try
             {
                 var req = streamSource.CreateStream(path);
-                var outStreamHandler = new OutcomingNetStreamHandler(sender, req.stream, clientRequestId);
+                var outStreamHandler = new OutcomingNetStreamHandler(sender, req, clientRequestId);
                 activeRequest.Add(sender, outStreamHandler);
                 SendStreamCreated(sender, clientRequestId, req);
             } catch (NetStreamException ex)
@@ -83,8 +83,8 @@ namespace MVirus.Server
 
         private void SendStreamCreated(ClientInfo client, byte streamId, RequestedStreamParams streamParams)
         {
-            MVLog.Debug("Created stream size: " + streamParams.stream.Length);
-            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamCreated>().Setup(streamId, streamParams.stream.Length, streamParams.compressed);
+            MVLog.Debug("Created stream size: " + streamParams.length);
+            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamCreated>().Setup(streamId, streamParams.length, streamParams.compressed);
             client.SendPackage(req);
         }
 
@@ -96,7 +96,7 @@ namespace MVirus.Server
             stream.Close();
             if (sendMessage)
             {
-                var req = NetPackageManager.GetPackage<NetPackageMVirusStreamClosed>().Setup(streamId);
+                var req = NetPackageManager.GetPackage<NetPackageMVirusStreamClosed>().Setup(streamId, stream.finished);
                 client.SendPackage(req);
             }
 

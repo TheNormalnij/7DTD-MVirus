@@ -38,9 +38,19 @@ namespace MVirus.Server
                             MVirusConfig.RemoteHttpAddr = item.GetAttribute("value");
                             break;
                         }
-                    case "ModCompression":
+                    case "StaticCompression":
                         {
-                            MVirusConfig.FileCompression = item.GetAttribute("value") == "true";
+                            MVirusConfig.StaticFileCompression = item.GetAttribute("value") == "true";
+                            break;
+                        }
+                    case "ActiveCompression":
+                        {
+                            MVirusConfig.ActiveFileCompression = item.GetAttribute("value") == "true";
+                            break;
+                        }
+                    case "CacheAllRemoteFiles":
+                        {
+                            MVirusConfig.CacheAllRemoteFiles = item.GetAttribute("value") == "true";
                             break;
                         }
                 }

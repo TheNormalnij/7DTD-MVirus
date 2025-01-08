@@ -21,10 +21,11 @@ namespace MVirus.Server
 
             foreach (var mod in ModManager.GetLoadedMods())
             {
-                if (mod == thisMod || mod.Name == "0_TFP_Harmony")
+                if (mod == thisMod || mod.Name == "TFP_Harmony")
                     continue;
 
-                var modCachePath = CombineHttpPath(cachePath, mod.Name);
+                var modDirectoryName = Path.GetFileName(mod.Path);
+                var modCachePath = CombineHttpPath(cachePath, modDirectoryName);
 
                 if (!SdDirectory.Exists(modCachePath))
                     SdDirectory.CreateDirectory(modCachePath);
@@ -34,7 +35,7 @@ namespace MVirus.Server
                 var startCut = mod.Path.Length + 1;
                 CacheDirectory(files, startCut, mod.Path, modCachePath);
 
-                var modInfo = new ServerModInfo(mod.Name, files.ToArray());
+                var modInfo = new ServerModInfo { Name = mod.Name, DirName = modDirectoryName, Files = files.ToArray() };
                 loadedMods.Add(modInfo);
             }
         }
@@ -47,7 +48,8 @@ namespace MVirus.Server
             if (SdDirectory.Exists(targetPath))
                 SdDirectory.Delete(targetPath, true);
 
-            SdDirectory.CreateDirectory(targetPath);
+            if (MVirusConfig.CacheAllRemoteFiles)
+                SdDirectory.CreateDirectory(targetPath);
 
             foreach (var dir in SdDirectory.GetDirectories(path))
             {
@@ -81,14 +83,22 @@ namespace MVirus.Server
                     return outPath;
                 } catch
                 {
-                    SdFile.Copy(filePath, targetFilePath);
+                    if (MVirusConfig.CacheAllRemoteFiles)
+                    {
+                        SdFile.Copy(filePath, targetFilePath);
+                        return targetFilePath;
+                    }
                 }
             }
             else
             {
-                SdFile.Copy(filePath, targetFilePath);
+                if (MVirusConfig.CacheAllRemoteFiles)
+                {
+                    SdFile.Copy(filePath, targetFilePath);
+                    return targetFilePath;
+                }
             }
-            return targetFilePath;
+            return filePath;
         }
 
         private static void CompressFile(string filePath, string targetFilePath)
@@ -113,7 +123,7 @@ namespace MVirus.Server
 
         private static bool IsFileShouldBeCompressed(string filePath)
         {
-            if (!MVirusConfig.FileCompression)
+            if (!MVirusConfig.StaticFileCompression)
                 return false;
 
             if (filePath.EndsWith(".png"))

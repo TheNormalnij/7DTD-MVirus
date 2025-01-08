@@ -2,6 +2,7 @@
 using MVirus.Shared;
 using MVirus.Shared.NetPackets;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace MVirus.Client
@@ -112,7 +113,7 @@ namespace MVirus.Client
             foreach (var remoteMod in remoteInfo)
             {
                 foreach (var file in remoteMod.Files)
-                    list.Add(new ServerFileInfo(remoteMod.Name + "/" + file.Path, file.Size, file.Crc));
+                    list.Add(new ServerFileInfo(remoteMod.DirName + "/" + file.Path, file.Size, file.Crc));
             }
             return new DownloadFileQuery(list);
         }
@@ -123,10 +124,12 @@ namespace MVirus.Client
                 mod.Load();
         }
 
-        public static bool IsServerResource(string name)
+        public static RemoteMod GetRemoteMod(string remoteModName)
         {
-            return remoteMods.ContainsKey(name);
-        }
+            if (remoteMods.TryGetValue(remoteModName, out var remoteMod))
+                return remoteMod;
 
+            return null;
+        }
     }
 }

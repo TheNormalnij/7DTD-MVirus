@@ -15,12 +15,13 @@ namespace MVirus.Client.Hooks
                 int resnameStart = startPos + "@modfolder(".Length;
                 int endPos = _pathString.IndexOf("):", StringComparison.Ordinal);
 
-                string resourceName = _pathString.Substring(resnameStart, endPos - resnameStart);
+                string remoteModName = _pathString.Substring(resnameStart, endPos - resnameStart);
 
-                if (!RemoteContentManager.IsServerResource(resourceName))
+                var remoteMod = RemoteContentManager.GetRemoteMod(remoteModName);
+                if (remoteMod == null)
                     return true;
 
-                __result = _pathString.Substring(0, startPos) + API.instance.Path + "/Cache/" + resourceName + "/" + _pathString.Substring(endPos + 2);
+                __result = _pathString.Substring(0, startPos) + remoteMod.Path + "/" + _pathString.Substring(endPos + 2);
 
                 return false;
             }
