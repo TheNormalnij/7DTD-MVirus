@@ -23,6 +23,7 @@ namespace MVirus.Client
     class RemoteMod
     {
         public readonly string name;
+        public readonly string dirName;
         private readonly ServerFileInfo[] files;
 
         private readonly List<LoadedAtlasInfo> atlases;
@@ -32,7 +33,7 @@ namespace MVirus.Client
         {
             get
             {
-                return API.clientCachePath + "/" + name;
+                return API.clientCachePath + "/" + dirName;
             }
         }
 
@@ -42,6 +43,7 @@ namespace MVirus.Client
         {
             State = RemoteModLoadState.Stopped;
             name = remoteMod.Name;
+            dirName = remoteMod.DirName;
             files = remoteMod.Files;
             atlases = new List<LoadedAtlasInfo>();
             atlasManagers = new List<string>();
