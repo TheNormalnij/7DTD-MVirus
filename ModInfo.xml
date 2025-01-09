@@ -4,7 +4,7 @@
 	<DisplayName value="MVirus" />
 	<Description value="Mod manager. Server-side assets loader"/>
 	<Author value="Uladzislau 'TheNormalnij' Nikalayevich"/>
-	<Version value="0.2.2"/>
+	<Version value="0.3.0"/>
 	<Website value="https://github.com/TheNormalnij/7DTD-MVirus"/>
 	<SkipWithAntiCheat value="false" />
 </xml>

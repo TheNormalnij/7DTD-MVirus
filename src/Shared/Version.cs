@@ -3,7 +3,7 @@ namespace MVirus.Shared
 {
     public class Version
     {
-        public static uint VERSION = 2;
-        public static uint MINIMAL_CLIENT_VERSION = 2;
+        public static uint VERSION = 3;
+        public static uint MINIMAL_CLIENT_VERSION = 3;
     }
 }
