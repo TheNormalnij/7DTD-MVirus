@@ -56,7 +56,7 @@ namespace MVirus.Server
             if (SdDirectory.Exists(targetPath))
                 SdDirectory.Delete(targetPath, true);
 
-            if (MVirusConfig.CacheAllRemoteFiles)
+            if (MVirusConfig.CacheAllRemoteFiles || MVirusConfig.StaticFileCompression)
                 SdDirectory.CreateDirectory(targetPath);
 
             foreach (var dir in SdDirectory.GetDirectories(path))
@@ -86,7 +86,7 @@ namespace MVirus.Server
             if (SdDirectory.Exists(targetPath))
                 SdDirectory.Delete(targetPath, true);
 
-            if (MVirusConfig.CacheAllRemoteFiles)
+            if (MVirusConfig.CacheAllRemoteFiles || MVirusConfig.StaticFileCompression)
                 SdDirectory.CreateDirectory(targetPath);
 
             foreach (var dir in SdDirectory.GetDirectories(path))
