@@ -11,7 +11,7 @@
 		1 - use external HTTP server
 		2 - use game connection (experemental)
 	-->
-	<property name="FileTransferType" value="0"/>
+	<property name="FileTransferType" value="2"/>
 
 	<!-- Addres to external HTTP file server or CDN if you are using it -->
 	<property name="ExternalHTTPServerAddr" value="https://example.com/optionalpath"/>
@@ -22,17 +22,17 @@
 	<!-- Enable active compression for mod files.
 		 Increases CPU usage but saves disk space
 	-->
-	<property name="ActiveCompression" value="false"/>
+	<property name="ActiveCompression" value="true"/>
 
 	<!-- Enable static compression for mod files.
 	     The mod will create *.gz files in the http cache folder.
 		 Precompressed files are compabiable with the ngx_http_gzip_static_module nginx module
 		 This property disables ActiveCompression
 	-->
-	<property name="StaticCompression" value="true"/>
+	<property name="StaticCompression" value="false"/>
 
 	<!-- Cache remote files.
 		 Doubles disk usage, but allows edit mods at runtime
 	-->
-	<property name="CacheAllRemoteFiles" value="true"/>
+	<property name="CacheAllRemoteFiles" value="false"/>
 </MVirusSettings>
