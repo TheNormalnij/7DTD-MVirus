@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MVirus.Shared.Config;
 using MVirus.Shared.NetPackets;
 
 namespace MVirus.Server.Hooks
@@ -9,6 +10,9 @@ namespace MVirus.Server.Hooks
         static void Prefix(ref ClientInfo _cInfo)
         {
             if (!GameManager.IsDedicatedServer)
+                return;
+
+            if (!MVirusConfig.IsModSharingEnabled)
                 return;
 
             _cInfo.SendPackage(NetPackageManager.GetPackage<NetPackageMVirusHello>()

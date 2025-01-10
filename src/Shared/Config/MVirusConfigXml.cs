@@ -2,7 +2,7 @@
 using System;
 using System.Xml.Linq;
 
-namespace MVirus.Server
+namespace MVirus.Shared.Config
 {
     public class MVirusConfigXml
     {
@@ -51,6 +51,11 @@ namespace MVirus.Server
                     case "CacheAllRemoteFiles":
                         {
                             MVirusConfig.CacheAllRemoteFiles = item.GetAttribute("value") == "true";
+                            break;
+                        }
+                    case "ShareMods":
+                        {
+                            MVirusConfig.IsModSharingEnabled = item.GetAttribute("value") == "true";
                             break;
                         }
                 }

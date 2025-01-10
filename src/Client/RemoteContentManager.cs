@@ -1,8 +1,8 @@
 ﻿using MVirus.Client.Transports;
 using MVirus.Shared;
+using MVirus.Shared.Config;
 using MVirus.Shared.NetPackets;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace MVirus.Client
@@ -27,7 +27,7 @@ namespace MVirus.Client
             ParseRemoteMods(remoteInfo);
 
             var filesToDownload = GetAllRemoteModsFiles(remoteInfo);
-            currentLoading = new ContentLoader(filesToDownload, API.clientCachePath, activeTransport);
+            currentLoading = new ContentLoader(filesToDownload, MVirusConfig.clientCachePath, activeTransport);
             _ = Process();
         }
 

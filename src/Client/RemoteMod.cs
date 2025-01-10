@@ -1,4 +1,5 @@
 ﻿using MVirus.Shared;
+using MVirus.Shared.Config;
 using System;
 using System.Collections.Generic;
 
@@ -33,7 +34,7 @@ namespace MVirus.Client
         {
             get
             {
-                return API.clientCachePath + "/" + dirName;
+                return MVirusConfig.clientCachePath + "/" + dirName;
             }
         }
 

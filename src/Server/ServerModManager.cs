@@ -1,5 +1,6 @@
 ﻿using MVirus.Server.NetStreams;
 using MVirus.Shared;
+using MVirus.Shared.Config;
 using MVirus.Shared.NetPackets;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,6 @@ namespace MVirus.Server
             try
             {
                 MVLog.Out("Start services");
-                MVirusConfig.Load();
                 ContentScanner.PrepareContent();
                 CreateContentDeliveryHandler();
                 MVLog.Out("Services are ready");

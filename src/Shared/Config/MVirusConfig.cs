@@ -1,6 +1,7 @@
 ﻿using MVirus.Shared.NetPackets;
+using System.IO;
 
-namespace MVirus.Server
+namespace MVirus.Shared.Config
 {
     public class MVirusConfig
     {
@@ -10,6 +11,8 @@ namespace MVirus.Server
         public static bool StaticFileCompression { get; set; } = true;
         public static bool ActiveFileCompression { get; set; } = false;
         public static bool CacheAllRemoteFiles {  get; set; } = true;
+        public static bool IsModSharingEnabled { get; set; } = true;
+        public static string clientCachePath = Path.Combine(API.instance.Path, "Cache");
 
         public static void Load()
         {

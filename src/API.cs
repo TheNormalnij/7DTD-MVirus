@@ -2,7 +2,7 @@
 using HarmonyLib;
 using MVirus.Client.NetStreams;
 using MVirus.Server;
-using System.IO;
+using MVirus.Shared.Config;
 
 namespace MVirus
 {
@@ -12,15 +12,15 @@ namespace MVirus
         public static Mod instance = null;
 
         public static IncomingStreamHandler incomingStreamHandler = null;
-        public static string clientCachePath; 
 
         // Entrypoint
         public void InitMod(Mod _modInstance)
         {
             instance = _modInstance;
-            clientCachePath = Path.Combine(_modInstance.Path, "Cache");
 
             harmony.PatchAll();
+
+            MVirusConfig.Load();
 
             if (GameManager.IsDedicatedServer)
             {

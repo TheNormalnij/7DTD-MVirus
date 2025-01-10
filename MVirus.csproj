@@ -72,6 +72,7 @@
     <Compile Include="src\Client\CacheScanner.cs" />
     <Compile Include="src\Client\NetStreams\IncomingNetStream.cs" />
     <Compile Include="src\Client\NetStreams\IncomingStreamHandler.cs" />
+    <Compile Include="src\Server\Hooks\NetPackageManagerStartServerHook.cs" />
     <Compile Include="src\Server\NetStreams\OutgoingStreamStore.cs" />
     <Compile Include="src\Server\NetStreams\StreamSource\FileStreamActiveComressed.cs" />
     <Compile Include="src\Server\NetStreams\StreamSource\FileStreamStaticCompressed.cs" />
@@ -99,8 +100,8 @@
     <Compile Include="src\Client\StreamProgressWrapper.cs" />
     <Compile Include="src\Client\StreamUtils.cs" />
     <Compile Include="src\Server\Hooks\ClientAuthHook.cs" />
-    <Compile Include="src\Server\MVirusConfig.cs" />
-    <Compile Include="src\Server\MVirusConfigXml.cs" />
+    <Compile Include="src\Shared\Config\MVirusConfig.cs" />
+    <Compile Include="src\Shared\Config\MVirusConfigXml.cs" />
     <Compile Include="src\Server\NetStreams\StreamSource\FileStreamSource.cs" />
     <Compile Include="src\Server\NetStreams\StreamSource\IStreamSource.cs" />
     <Compile Include="src\Server\NetStreams\OutcomingStreamHandler.cs" />

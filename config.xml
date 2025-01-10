@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
-<MVirusServerSettings>
+<MVirusSettings>
+	<!-- Enables mod sharing.
+		 Disabling this option may resolve connection issues with players
+		 who do not have the MVirus mod.
+	-->
+	<property name="ShareMods" value="true"/>
+
 	<!-- Used file transfer protocol:
 		0 - use internal HTTP server
 		1 - use external HTTP server
@@ -29,6 +35,4 @@
 		 Doubles disk usage, but allows edit mods at runtime
 	-->
 	<property name="CacheAllRemoteFiles" value="true"/>
-
-			  
-</MVirusServerSettings>
+</MVirusSettings>
