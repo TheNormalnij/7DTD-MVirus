@@ -8,6 +8,9 @@ namespace MVirus.Client.Hooks
     {
         static bool Prefix(ref string __result, ref string _pathString)
         {
+            if (ConnectionManager.Instance.IsServer)
+                return true;
+
             int startPos = _pathString.IndexOf("@modfolder(", StringComparison.OrdinalIgnoreCase);
 
             if (startPos >= 0)

@@ -16,7 +16,7 @@ namespace MVirus.Server
         public static void OnServerGameStarted() {
             try
             {
-                MVLog.Out("Start services");
+                MVLog.Out("Start delivery services");
                 ContentScanner.PrepareContent();
                 CreateContentDeliveryHandler();
                 MVLog.Out("Services are ready");

@@ -82,6 +82,9 @@ namespace MVirus.Shared.NetPackets
             if (!connectionManager.IsConnected)
                 return;
 
+            if (connectionManager.IsServer)
+                return;
+
             if (MVirusProtocolVersion != 0)
             {
                 MVLog.Warning("Protocol version missmatch");

@@ -10,9 +10,10 @@ namespace MVirus.Client.Hooks
     {
         static bool Prefix()
         {
-            // Skip if the server has no MVirus
-            var testPackage = NetPackageManager.GetPackage<NetPackageMVirusHello>().GetType();
-            if (!NetPackageManager.packageClassToPackageId.ContainsKey(testPackage))
+            if (ConnectionManager.Instance.IsServer)
+                return true;
+
+            if (!HasServerMVirus())
                 return true;
 
             if (WorldStaticData.receivedConfigsHandlerCoroutine != null)
@@ -97,6 +98,12 @@ namespace MVirus.Client.Hooks
 
             while (nextHandler.MoveNext())
                 yield return nextHandler.Current;
+        }
+
+        private static bool HasServerMVirus()
+        {
+            var testPackage = NetPackageManager.GetPackage<NetPackageMVirusHello>().GetType();
+            return NetPackageManager.packageClassToPackageId.ContainsKey(testPackage);
         }
     }
 }

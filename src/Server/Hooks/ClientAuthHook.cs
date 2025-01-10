@@ -9,9 +9,6 @@ namespace MVirus.Server.Hooks
     {
         static void Prefix(ref ClientInfo _cInfo)
         {
-            if (!GameManager.IsDedicatedServer)
-                return;
-
             if (!MVirusConfig.IsModSharingEnabled)
                 return;
 

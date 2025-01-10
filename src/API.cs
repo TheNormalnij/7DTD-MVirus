@@ -22,14 +22,18 @@ namespace MVirus
 
             MVirusConfig.Load();
 
-            if (GameManager.IsDedicatedServer)
+            if (MVirusConfig.IsModSharingEnabled)
             {
-                ModEvents.GameStartDone.RegisterHandler(ServerModManager.OnServerGameStarted);
+                ModEvents.GameStartDone.RegisterHandler(() => {
+                    if (!ConnectionManager.Instance.IsClient)
+                        ServerModManager.OnServerGameStarted();
+                });
+                // This method should handle all states
                 ModEvents.GameShutdown.RegisterHandler(ServerModManager.OnServerGameStopped);
-            } else
-            {
-                incomingStreamHandler = new IncomingStreamHandler();
             }
+
+            if (!GameManager.IsDedicatedServer)
+                incomingStreamHandler = new IncomingStreamHandler();
         }
     }
 }
