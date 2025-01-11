@@ -12,6 +12,7 @@ namespace MVirus.Client
         private static readonly SearchPathRemoteMods prefabsSearch = new SearchPathRemoteMods("Prefabs");
         private static readonly SearchPathRemoteMods prefabsImposterSearch = new SearchPathRemoteMods("Prefabs");
         private static ILoadingTransport activeTransport;
+        private static int maxDownloadConnections = 1;
 
         public static readonly Dictionary<string, RemoteMod> remoteMods = new Dictionary<string, RemoteMod>();
 
@@ -28,6 +29,7 @@ namespace MVirus.Client
 
             var filesToDownload = GetAllRemoteModsFiles(remoteInfo);
             currentLoading = new ContentLoader(filesToDownload, MVirusConfig.clientCachePath, activeTransport);
+            currentLoading.MaxConcurrentConnections = maxDownloadConnections;
             _ = Process();
         }
 
@@ -81,6 +83,7 @@ namespace MVirus.Client
         public static void RequestContent(RemoteHttpInfo remoteHttpInfo)
         {
             activeTransport = new ContentLoadingTransportHttp(remoteHttpInfo);
+            maxDownloadConnections = 3;
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
         }
 
@@ -90,6 +93,7 @@ namespace MVirus.Client
         public static void RequestContent()
         {
             activeTransport = new ContentLoadingTransportNet();
+            maxDownloadConnections = 1;
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
         }
 
