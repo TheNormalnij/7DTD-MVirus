@@ -89,6 +89,10 @@ namespace MVirus.Client
             }
 
             var filteredList = new List<ServerFileInfo>();
+
+            if (currentTasks.Count == 0)
+                return filteredList;
+
             for (; ; )
             {
                 cancellationToken.ThrowIfCancellationRequested();
