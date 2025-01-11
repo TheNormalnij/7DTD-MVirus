@@ -111,29 +111,28 @@ namespace MVirus.Server
         {
             while (enabled)
             {
-                var removeList = new List<OutcomingNetStreamHandler>();
-                foreach (var client in activeRequest.GetActiveClients())
+                try
                 {
-                    if (client.netConnection[0].IsDisconnected())
+                    foreach (var client in activeRequest.GetActiveClients())
                     {
-                        foreach (var handler in activeRequest.GetStreams(client))
-                            removeList.Add(handler);
-                    }
-                    try
-                    {
+                        if (client.netConnection[0].IsDisconnected())
+                        {
+                            foreach (var handler in activeRequest.GetStreams(client))
+                                CloseClientStream(handler.client, handler.streamId, false);
+                        }
+
                         foreach (var handler in activeRequest.GetStreams(client))
                         {
                             await handler.Update();
                             if (handler.finished)
-                                removeList.Add(handler);
+                                CloseClientStream(handler.client, handler.streamId, true);
                         }
-                    } catch (Exception ex) {
-                        MVLog.Exception(ex);
                     }
                 }
-
-                foreach (var handler in removeList)
-                    CloseClientStream(handler.client, handler.streamId, true);
+                catch (Exception ex)
+                {
+                    MVLog.Exception(ex);
+                }
 
                 await Task.Delay(50);
             }

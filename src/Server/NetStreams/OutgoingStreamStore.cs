@@ -21,9 +21,11 @@ namespace MVirus.Server.NetStreams
             clientStreams.Add(handler);
         }
 
-        public ICollection<ClientInfo> GetActiveClients()
+        public List<ClientInfo> GetActiveClients()
         {
-            return store.Keys;
+            var list = new List<ClientInfo>();
+            store.CopyKeysTo(list);
+            return list;
         }
 
         public OutcomingNetStreamHandler GetClientStream(ClientInfo client, byte streamId)
@@ -42,13 +44,13 @@ namespace MVirus.Server.NetStreams
             return null;
         }
 
-        public ICollection<OutcomingNetStreamHandler> GetStreams(ClientInfo client)
+        public OutcomingNetStreamHandler[] GetStreams(ClientInfo client)
         {
             List<OutcomingNetStreamHandler> streams;
 
-            if (!store.TryGetValue(client, out streams)) return default(List<OutcomingNetStreamHandler>);
+            if (!store.TryGetValue(client, out streams)) return new OutcomingNetStreamHandler[0];
 
-            return streams;
+            return streams.ToArray();
         }
 
         public void Remove(ClientInfo client)
