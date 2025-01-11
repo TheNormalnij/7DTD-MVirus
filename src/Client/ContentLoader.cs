@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MVirus.Client.Transports;
 using MVirus.Shared;
 using System.IO;
+using System.Collections.Generic;
 
 namespace MVirus.Client
 {
@@ -19,6 +20,8 @@ namespace MVirus.Client
 
     public class ContentLoader
     {
+        private const int CONCURRENT_DOWNLOADS_COUNT = 3;
+
         private readonly DownloadFileQuery filesToLoad;
         private readonly string outPath;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -84,21 +87,48 @@ namespace MVirus.Client
 
             State = LoadingState.LOADING;
 
-            foreach (var fileInfo in filesToLoad.list)
-            {
-                try
-                {
-                    PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(fileInfo.Path)));
-                    Action<int> progressCounter = count => { DownloadSize -= count; };
+            await DoDownloadLoop();
 
-                    MVLog.Out("Download file: " + fileInfo.Path);
-                    await transport.DownloadFileAsync(fileInfo, outPath, cancellationTokenSource.Token, progressCounter);
-                    MVLog.Out("Download complecte: " + fileInfo.Path);
-                }
-                catch (Exception ex)
+            MVLog.Out("All download tasks complected");
+
+            State = LoadingState.COMPLECTED;
+        }
+
+        private async Task DoDownloadLoop()
+        {
+            var tasksArray = filesToLoad.list.ToArray();
+            var index = -1;
+
+            Task getNextTask()
+            {
+                index++;
+                if (tasksArray.Length > index)
+                    return DownloadFile(tasksArray[index]);
+                return null;
+            }
+
+            List<Task> currentTasks = new List<Task>();
+            for (int i = 0; i < CONCURRENT_DOWNLOADS_COUNT; i++)
+            {
+                var task = getNextTask();
+                if (task == null)
+                    break;
+
+                currentTasks.Add(task);
+            }
+
+            if (currentTasks.Count == 0)
+                return;
+
+            for (; ; )
+            {
+                var finished = await Task.WhenAny(currentTasks);
+
+                if (finished.IsFaulted)
                 {
-                    MVLog.Exception(ex);
-                    MVLog.Error("DownloadFileAsync error: " + ex.Message);
+                    var error = finished.Exception;
+                    MVLog.Exception(error);
+                    MVLog.Error("DownloadFileAsync error: " + error.Message);
                     StopDownloading();
                 }
 
@@ -108,11 +138,29 @@ namespace MVirus.Client
                     MVLog.Out("Downloading canceled");
                     return;
                 }
+
+                currentTasks.Remove(finished);
+
+                var nextTask = getNextTask();
+                if (nextTask != null)
+                    currentTasks.Add(nextTask);
+
+                if (currentTasks.Count == 0)
+                    break;
             }
+        }
 
-            MVLog.Out("All download tasks complected");
+        private async Task DownloadFile(ServerFileInfo fileInfo)
+        {
+            PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(fileInfo.Path)));
+            MVLog.Out("Download file: " + fileInfo.Path);
+            await transport.DownloadFileAsync(fileInfo, outPath, cancellationTokenSource.Token, ProgressCounter);
+            MVLog.Out("Download complecte: " + fileInfo.Path);
+        }
 
-            State = LoadingState.COMPLECTED;
+        private void ProgressCounter(int count)
+        {
+            DownloadSize -= count;
         }
     }
 }
