@@ -76,10 +76,10 @@ namespace MVirus.Client.NetStreams
                 return;
             }
 
-            request.stream = new IncomingNetStream
-            {
-                GzipCompressed = compressed
-            };
+            request.stream = new IncomingNetStream(
+                compressed: compressed,
+                bufferSize: (int)Math.Min(20 * 1024 * 1024, streamSize)
+            );
             request.stream.SetLength(streamSize);
             request.creatingTask.SetResult(request.stream);
             request.status = StreamStatus.READING;
@@ -187,7 +187,7 @@ namespace MVirus.Client.NetStreams
             MVLog.Debug("Send sync");
 
             var request = NetPackageManager.GetPackage<NetPackageMVirusStreamSync>().Setup(syncData);
-            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request, true);
         }
 
         private void StartStreamSyncing()
@@ -218,7 +218,7 @@ namespace MVirus.Client.NetStreams
                 } catch (Exception ex) {
                     MVLog.Exception(ex);
                 }
-                await Task.Delay(200);
+                await Task.Delay(1000);
             }
         }
 

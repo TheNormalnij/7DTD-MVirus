@@ -8,7 +8,7 @@ namespace MVirus.Server
     public class OutcomingNetStreamHandler
     {
         private long sendedCount = 0;
-        private long windowSize = 1024 * 50;
+        private long windowSize = 1024 * 1024 * 20;
 
         private readonly byte[] buffer;
         public readonly RequestedStreamParams req;

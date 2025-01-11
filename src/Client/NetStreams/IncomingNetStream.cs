@@ -13,7 +13,7 @@ namespace MVirus.Client.NetStreams
         public override long Length => TotalCount;
         public override long Position { get => readedCount; set => throw new NotImplementedException(); }
 
-        public bool GzipCompressed { get; set; } = false;
+        public bool GzipCompressed { get; private set; } = false;
         public int BufferAvialableSize => buffer.FreeSize;
         public long SendedCount { get; private set; } = 0;
         public long TotalCount { get; private set; } = -1;
@@ -23,10 +23,14 @@ namespace MVirus.Client.NetStreams
 
         private Exception exception = null;
 
-        private readonly RingBuffer<byte> buffer = new RingBuffer<byte>(4 * 1024 * 1024);
+        private readonly RingBuffer<byte> buffer;
         private StreamReading currentReading;
 
-        public IncomingNetStream() { }
+        public IncomingNetStream(bool compressed, int bufferSize)
+        {
+            GzipCompressed = compressed;
+            buffer = new RingBuffer<byte>(bufferSize);
+        }
 
         public override void Flush()
         {
