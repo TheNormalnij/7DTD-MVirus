@@ -10,11 +10,9 @@ namespace MVirus.Client.NetStreams
 {
     public class IncomingStreamHandler
     {
-        private const long STREAM_POOL_SIZE = 10;
-        private readonly NetStreamRequest[] activeRequests = new NetStreamRequest[STREAM_POOL_SIZE];
-        private int lastStreamId = -1;
-
+        private const int STREAM_CREATE_OPEN_INTERVAL_MS = 5000;
         private bool streamsSynced = false;
+        private readonly StreamPool streamPool = new StreamPool();
 
         /// <summary>
         /// Creates a stream with the server
@@ -26,46 +24,24 @@ namespace MVirus.Client.NetStreams
 
             var taskSource = new TaskCompletionSource<IncomingNetStream>();
 
-            var streamId = GetNextStreamId();
-            MVLog.Debug($"Create new stream {streamId} {path}");
-
-            activeRequests[streamId] = new NetStreamRequest
+            var streamId = streamPool.Add(new NetStreamRequest
             {
                 stream = null,
                 status = StreamStatus.CREATING,
                 creatingTask = taskSource,
-            };
+                lastUpdateTick = Environment.TickCount,
+                path = path,
+            });
 
-            var request = NetPackageManager.GetPackage<NetPackageMVirusStreamCreate>().Setup(path, streamId);
-            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
+            SendStreamRequest(path, streamId);
 
             return taskSource.Task;
-        }
-
-        private byte GetNextStreamId()
-        {
-            for (int i = lastStreamId + 1; i < activeRequests.Length; i++) {
-                if (activeRequests[i] == null)
-                {
-                    lastStreamId = i;
-                    return (byte)i;
-                }
-            }
-            for (int i = 0; i < lastStreamId; i++)
-            {
-                if (activeRequests[i] == null)
-                {
-                    lastStreamId = i;
-                    return (byte)i;
-                }
-            }
-            throw new NetStreamException("Stream limit reached");
         }
 
         public void HandleIncomingData(byte streamId, byte[] data)
         {
             MVLog.Debug($"Got data: {streamId} {data.Length}");
-            var request = activeRequests[streamId];
+            var request = streamPool.Get(streamId);
             if (request == null)
             {
                 SendStreamError(streamId, StreamErrorCode.NOT_FOUND);
@@ -80,17 +56,12 @@ namespace MVirus.Client.NetStreams
             }
 
             request.stream.RecievedData(data);
-
-/*            if (request.stream.IsAllDataRecieved())
-            {
-                request.status = StreamStatus.FINISHED;
-            }*/
         }
 
         public void HandleStreamOpen(byte streamId, long streamSize, bool compressed)
         {
             MVLog.Debug($"Stream oppened: {streamId} compressed {compressed}" );
-            var request = activeRequests[streamId];
+            var request = streamPool.Get(streamId);
             if (request == null)
             {
                 MVLog.Debug($"Not found {streamId}");
@@ -121,7 +92,7 @@ namespace MVirus.Client.NetStreams
         {
             MVLog.Debug("Stream closed: " + streamId);
 
-            var request = activeRequests[streamId];
+            var request = streamPool.Get(streamId);
             if (request == null)
             {
                 SendStreamError(streamId, StreamErrorCode.NOT_FOUND);
@@ -144,23 +115,18 @@ namespace MVirus.Client.NetStreams
 
                         break;
                     }
-                case StreamStatus.CLOSING:
-                    {
-                        request.status = StreamStatus.FINISHED;
-                        break;
-                    }
                 default:
                     break;
             }
 
-            activeRequests[streamId] = null;
+            streamPool.Remove(streamId);
         }
 
         public void HandleError(byte streamId, StreamErrorCode code)
         {
             MVLog.Debug($"Stream error: {0} {1}", streamId, code.ToString());
 
-            var stream = activeRequests[streamId];
+            var stream = streamPool.Get(streamId);
             if (stream == null)
             {
                 MVLog.Error("Unknown stream error: " + code.ToString());
@@ -182,26 +148,43 @@ namespace MVirus.Client.NetStreams
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
         }
 
+        private void SendStreamRequest(string path, byte streamId)
+        {
+            MVLog.Debug($"Send stream request {streamId} {path}");
+            var request = NetPackageManager.GetPackage<NetPackageMVirusStreamCreate>().Setup(path, streamId);
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
+        }
+
         private void SyncStreams()
         {
             var syncData = new List<NetStreamSyncData>();
+            var currentTick = Environment.TickCount;
 
-            for (int streamId = 0; streamId < STREAM_POOL_SIZE; streamId++)
+            streamPool.Foreach((NetStreamRequest req) =>
             {
-                var req = activeRequests[streamId];
-                if (req != null && req.status == StreamStatus.READING)
+                if (req.status == StreamStatus.CREATING)
+                {
+                    if (currentTick > req.lastUpdateTick + STREAM_CREATE_OPEN_INTERVAL_MS)
+                    {
+                        SendStreamRequest(req.path, req.streamId);
+                        req.lastUpdateTick = currentTick;
+                    }
+                }
+                else if (req.status == StreamStatus.READING)
                 {
                     syncData.Add(new NetStreamSyncData
                     {
-                        streamId = (byte)streamId,
+                        streamId = req.streamId,
                         readedCount = req.stream.SendedCount,
                         bufferSize = req.stream.BufferAvialableSize,
                     });
                 }
-            }
+            });
 
             if (syncData.Count == 0)
                 return;
+
+            MVLog.Debug("Send sync");
 
             var request = NetPackageManager.GetPackage<NetPackageMVirusStreamSync>().Setup(syncData);
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request);
@@ -241,28 +224,7 @@ namespace MVirus.Client.NetStreams
 
         private bool HasActiveStreams()
         {
-            foreach (var req in activeRequests)
-            {
-                if (req != null && (req.status == StreamStatus.READING || req.status == StreamStatus.CREATING))
-                    return true;
-            }
-
-            return false;
+            return !streamPool.IsEmpty();
         }
-    }
-
-    public enum StreamStatus
-    {
-        CREATING,
-        READING,
-        CLOSING,
-        FINISHED
-    }
-
-    public class NetStreamRequest
-    {
-        public IncomingNetStream stream;
-        public StreamStatus status;
-        public TaskCompletionSource<IncomingNetStream> creatingTask;
     }
 }

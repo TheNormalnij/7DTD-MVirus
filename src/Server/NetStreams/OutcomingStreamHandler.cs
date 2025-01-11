@@ -36,6 +36,10 @@ namespace MVirus.Server
 
             try
             {
+                var currentHandler = activeRequest.GetClientStream(sender, clientRequestId);
+                if (currentHandler != null)
+                    return;
+
                 var req = streamSource.CreateStream(path);
                 var outStreamHandler = new OutcomingNetStreamHandler(sender, req, clientRequestId);
                 activeRequest.Add(sender, outStreamHandler);

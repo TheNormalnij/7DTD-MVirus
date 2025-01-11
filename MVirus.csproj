@@ -72,6 +72,8 @@
     <Compile Include="src\Client\CacheScanner.cs" />
     <Compile Include="src\Client\NetStreams\IncomingNetStream.cs" />
     <Compile Include="src\Client\NetStreams\IncomingStreamHandler.cs" />
+    <Compile Include="src\Client\NetStreams\NetStreamRequest.cs" />
+    <Compile Include="src\Client\NetStreams\StreamPool.cs" />
     <Compile Include="src\Server\Hooks\NetPackageManagerStartServerHook.cs" />
     <Compile Include="src\Server\NetStreams\OutgoingStreamStore.cs" />
     <Compile Include="src\Server\NetStreams\StreamSource\FileStreamActiveComressed.cs" />
