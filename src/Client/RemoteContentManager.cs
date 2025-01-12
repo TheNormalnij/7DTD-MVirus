@@ -93,7 +93,7 @@ namespace MVirus.Client
         public static void RequestContent()
         {
             activeTransport = new ContentLoadingTransportNet();
-            maxDownloadConnections = 1;
+            maxDownloadConnections = 3;
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(NetPackageManager.GetPackage<NetPackageMVirusHelloResponse>().Setup());
         }
 

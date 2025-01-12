@@ -1,6 +1,5 @@
 ﻿using MVirus.Server.NetStreams;
 using MVirus.Shared.NetPackets;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MVirus.Server
@@ -21,7 +20,7 @@ namespace MVirus.Server
             client = _client;
             req = _req;
             streamId = clientId;
-            buffer = new byte[1024 * 50];
+            buffer = new byte[100 * 1024];
             finished = false;
             sendedCount = 0;
         }
@@ -35,33 +34,13 @@ namespace MVirus.Server
             windowSize = (clientReaded + clientBuffer) - sendedCount;
         }
 
-        public int GetAvialableClientStreamWriteSize()
+        public async Task Update()
         {
             var connection = client.netConnection[0] as NetConnectionSimple;
 
-            int size = 0;
-            var list = new List<NetPackage>();
-
-            connection.GetPackages(list);
-
-            foreach (var package in list)
-                size += package.GetLength();
-
-            return 2097152 - size;
-        }
-
-        public async Task Update()
-        {
-            var avialableSize = GetAvialableClientStreamWriteSize();
-
-            while (windowSize > 512 && !finished && avialableSize > 2097152 / 2)
-            {
-                var writedCount = await SendDataToClient();
-                if (writedCount == 0)
-                    break;
-
-                avialableSize -= writedCount; 
-            }
+            // This check produces a race condition.
+            if (windowSize > 512 && !finished && connection.reliableBufsToSend.Count < 20)
+                await SendDataToClient();
         }
 
         private async Task<int> SendDataToClient()

@@ -5,6 +5,7 @@ namespace MVirus.Shared.NetPackets
     public class NetPackageMVirusStreamData : NetPackage
     {
         public override bool AllowedBeforeAuth => true;
+        public override bool FlushQueue => true;
 
         private byte streamId;
         private byte[] data;
