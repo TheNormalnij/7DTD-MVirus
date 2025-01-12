@@ -20,6 +20,8 @@ namespace MVirus.Client
 
     public class ContentLoader
     {
+        private const int CONCURRENT_DOWNLOADS_COUNT = 3;
+
         private readonly DownloadFileQuery filesToLoad;
         private readonly string outPath;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -28,7 +30,6 @@ namespace MVirus.Client
         public LoadingState State { get; protected set; }
         public long ContentSize { get; protected set; }
         public long DownloadSize { get; protected set; }
-        public int MaxConcurrentConnections { get; set; } = 3;
 
         public ContentLoader(DownloadFileQuery _files, string targetPath, ILoadingTransport _transport)
         {
@@ -107,7 +108,7 @@ namespace MVirus.Client
             }
 
             List<Task> currentTasks = new List<Task>();
-            for (int i = 0; i < MaxConcurrentConnections; i++)
+            for (int i = 0; i < CONCURRENT_DOWNLOADS_COUNT; i++)
             {
                 var task = getNextTask();
                 if (task == null)
