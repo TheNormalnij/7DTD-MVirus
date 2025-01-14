@@ -4,16 +4,16 @@
 		 Disabling this option may resolve connection issues with players
 		 who do not have the MVirus mod.
 	-->
-	<property name="ShareMods" value="true"/>
+	<property name="ShareMods" value="false"/>
 
 	<!-- Used file transfer protocol:
 		0 - use internal HTTP server
 		1 - use external HTTP server
-		2 - use game connection (experemental)
+		2 - use game connection (experimental)
 	-->
 	<property name="FileTransferType" value="2"/>
 
-	<!-- Addres to external HTTP file server or CDN if you are using it -->
+	<!-- Address to external HTTP file server or CDN if you are using it -->
 	<property name="ExternalHTTPServerAddr" value="https://example.com/optionalpath"/>
 
 	<!-- Port for internal HTTP file server -->
@@ -26,7 +26,7 @@
 
 	<!-- Enable static compression for mod files.
 	     The mod will create *.gz files in the http cache folder.
-		 Precompressed files are compabiable with the ngx_http_gzip_static_module nginx module
+		 Precompressed files are compatible with the ngx_http_gzip_static_module nginx module
 		 This property disables ActiveCompression
 	-->
 	<property name="StaticCompression" value="false"/>
