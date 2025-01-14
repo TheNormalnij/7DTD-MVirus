@@ -1,7 +1,7 @@
 ﻿
-using MVirus.Shared.NetStreams;
+using MVirus.NetStreams;
 
-namespace MVirus.Server.NetStreams
+namespace MVirus.Server.NetStreams.StreamSource
 {
     public class StreamSourceChain : IStreamSource
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MVirus.Server.NetStreams
+namespace MVirus.Server.NetStreams.StreamSource
 {
     public interface IStreamSource
     {

@@ -3,9 +3,9 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using MVirus.Server.NetStreams;
-using MVirus.Shared.NetStreams;
-using MVirus.Shared;
+using MVirus.Logger;
+using MVirus.NetStreams;
+using MVirus.Server.NetStreams.StreamSource;
 
 namespace MVirus.Server
 {
@@ -58,7 +58,7 @@ namespace MVirus.Server
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception(ex);
+                    MVLog.Exception(ex);
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace MVirus.Server
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 context.Response.ContentType = "application/octet-stream";
                 context.Response.SendChunked = true;
-                
+
                 context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
                 context.Response.AddHeader("Last-Modified", File.GetLastWriteTime(filename).ToString("r"));
                 if (streamRequest.compressed)

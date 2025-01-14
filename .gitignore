@@ -1,4 +1,5 @@
-bin/
-Mods/
-obj/
+src/bin/
+out/
+src/obj/
 .vs/
+src/MVirus.csproj.user

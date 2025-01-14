@@ -1,9 +1,10 @@
-﻿using MVirus.Shared;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MVirus.Data;
+using MVirus.ModInfo;
 
 namespace MVirus.Client
 {

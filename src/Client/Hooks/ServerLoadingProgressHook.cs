@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
-using MVirus.Shared.NetPackets;
 using System.Collections;
+using MVirus.NetPackets;
 using UnityEngine;
 
 namespace MVirus.Client.Hooks

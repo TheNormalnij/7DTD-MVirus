@@ -1,7 +1,8 @@
-﻿using MVirus.Shared;
-using MVirus.Shared.Config;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using MVirus.Config;
+using MVirus.Logger;
+using MVirus.ModInfo;
 
 namespace MVirus.Client
 {
@@ -30,13 +31,7 @@ namespace MVirus.Client
         private readonly List<LoadedAtlasInfo> atlases;
         private readonly List<string> atlasManagers;
 
-        public string Path
-        {
-            get
-            {
-                return MVirusConfig.clientCachePath + "/" + dirName;
-            }
-        }
+        public string Path => MVirusConfig.clientCachePath + "/" + dirName;
 
         public RemoteModLoadState State { get; private set; }
 
@@ -52,7 +47,7 @@ namespace MVirus.Client
 
         public void Load()
         {
-            Log.Out("[MVirus] Load server mode: " + name);
+            MVLog.Out("Load server mode: " + name);
             State = RemoteModLoadState.Starting;
 
             try
@@ -70,7 +65,7 @@ namespace MVirus.Client
 
         public void Unload()
         {
-            Log.Out("[MVirus] Unload server mod: " + name);
+            MVLog.Out("Unload server mod: " + name);
             State = RemoteModLoadState.Unloading;
             try
             {
@@ -106,7 +101,7 @@ namespace MVirus.Client
             {
                 if (!ModManager.atlasManagers.TryGetValue(dirName, out var ame))
                 {
-                    Log.Out("[MVirus] Creating new atlas '" + dirName + "' for mod '" + name + "'");
+                    MVLog.Out("Creating new atlas '" + dirName + "' for mod '" + name + "'");
                     ModManager.RegisterAtlasManager(MultiSourceAtlasManager.Create(ModManager.atlasesParentGo, dirName), _createdByMod: true, ModManager.defaultShader);
                     ame = ModManager.atlasManagers[dirName];
 

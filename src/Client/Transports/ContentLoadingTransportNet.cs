@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MVirus.Data.Streams;
+using MVirus.ModInfo;
 
 namespace MVirus.Client.Transports
 {
@@ -10,7 +12,7 @@ namespace MVirus.Client.Transports
     {
         public void OnDownloadCanceled()
         {
-            
+
         }
 
         public async Task DownloadFileAsync(ServerFileInfo fileInfo, string outPath, CancellationToken cancellationToken, Action<int> progressCounter)
@@ -25,7 +27,7 @@ namespace MVirus.Client.Transports
 
                 if (netStream.GzipCompressed)
                 {
-                    await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
+                    await StreamCopyUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                         progressCounter);
 
                     // Server returns full file size when active compression is used.
@@ -33,7 +35,7 @@ namespace MVirus.Client.Transports
                         progressCounter.Invoke((int)(fileInfo.Size - netStream.TotalCount));
                 }
                 else
-                    await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
+                    await StreamCopyUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);
             }
             finally

@@ -1,14 +1,12 @@
-﻿
-using MVirus.Shared.NetStreams;
-using MVirus.Server.NetStreams;
-using MVirus.Shared;
-using MVirus.Shared.NetPackets;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Threading.Tasks;
+using MVirus.Logger;
+using MVirus.NetPackets;
+using MVirus.NetStreams;
+using MVirus.Server.NetStreams.StreamSource;
 
-namespace MVirus.Server
+namespace MVirus.Server.NetStreams
 {
     public class OutcomingStreamHandler
     {

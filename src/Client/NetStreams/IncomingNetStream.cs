@@ -23,13 +23,13 @@ namespace MVirus.Client.NetStreams
 
         private Exception exception = null;
 
-        private readonly RingBuffer<byte> buffer;
+        private readonly Data.RingBuffer<byte> buffer;
         private StreamReading currentReading;
 
         public IncomingNetStream(bool compressed, int bufferSize)
         {
             GzipCompressed = compressed;
-            buffer = new RingBuffer<byte>(bufferSize);
+            buffer = new Data.RingBuffer<byte>(bufferSize);
         }
 
         public override void Flush()

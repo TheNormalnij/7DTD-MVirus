@@ -1,6 +1,5 @@
-﻿
-using MVirus.Shared.NetStreams;
-using System;
+﻿using System;
+using MVirus.NetStreams;
 
 namespace MVirus.Client.NetStreams
 {

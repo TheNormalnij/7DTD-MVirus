@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
-using MVirus.Shared.Config;
 using System;
 using System.Collections.Generic;
+using MVirus.Config;
 
 namespace MVirus.Server.Hooks
 {

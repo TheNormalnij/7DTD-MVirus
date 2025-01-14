@@ -1,10 +1,10 @@
-﻿using MVirus.Server.NetStreams;
-using MVirus.Shared.NetPackets;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using MVirus.NetPackets;
+using MVirus.Server.NetStreams.StreamSource;
 using UniLinq;
 
-namespace MVirus.Server
+namespace MVirus.Server.NetStreams
 {
     public class OutcomingNetStreamHandler
     {

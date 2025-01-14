@@ -1,9 +1,10 @@
-﻿using DamienG.Security.Cryptography;
-using MVirus.Shared;
-using MVirus.Shared.Config;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using MVirus.Config;
+using MVirus.Data;
+using MVirus.Data.Hash;
+using MVirus.ModInfo;
 
 namespace MVirus.Server
 {

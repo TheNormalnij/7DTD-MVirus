@@ -1,13 +1,13 @@
-﻿using MVirus.Client.Transports;
-using MVirus.Shared;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using MVirus.Data.Streams;
+using MVirus.ModInfo;
 
-namespace MVirus.Client
+namespace MVirus.Client.Transports
 {
     public class ContentLoadingTransportHttp : ILoadingTransport
     {
@@ -44,7 +44,7 @@ namespace MVirus.Client
 
                 if (response.Content.Headers.ContentEncoding.FirstOrDefault() == "gzip")
                 {
-                    await StreamUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
+                    await StreamCopyUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                         progressCounter);
 
                     // Server returns full file size when active compression is used.
@@ -52,7 +52,7 @@ namespace MVirus.Client
                         progressCounter.Invoke((int)(fileInfo.Size - fileStream.Length));
                 }
                 else
-                    await StreamUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
+                    await StreamCopyUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
                                                                     progressCounter);
             }
             finally

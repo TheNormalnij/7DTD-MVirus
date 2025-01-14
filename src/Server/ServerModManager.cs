@@ -1,10 +1,11 @@
 ﻿using MVirus.Server.NetStreams;
-using MVirus.Shared;
-using MVirus.Shared.Config;
-using MVirus.Shared.NetPackets;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using MVirus.Config;
+using MVirus.Logger;
+using MVirus.NetPackets;
+using MVirus.Server.NetStreams.StreamSource;
 
 namespace MVirus.Server
 {
@@ -23,8 +24,7 @@ namespace MVirus.Server
             }
             catch (Exception e)
             {
-                Log.Exception(e);
-                Log.Error(e.StackTrace.ToString());
+                MVLog.Exception(e);
             }
         }
 

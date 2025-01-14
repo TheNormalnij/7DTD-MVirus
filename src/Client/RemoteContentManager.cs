@@ -1,9 +1,10 @@
 ﻿using MVirus.Client.Transports;
-using MVirus.Shared;
-using MVirus.Shared.Config;
-using MVirus.Shared.NetPackets;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MVirus.Config;
+using MVirus.Logger;
+using MVirus.ModInfo;
+using MVirus.NetPackets;
 
 namespace MVirus.Client
 {
@@ -19,7 +20,7 @@ namespace MVirus.Client
 
         public static void RequestServerMods(ServerModInfo[] remoteInfo)
         {
-            Log.Out("[MVirus] Request server mods");
+            MVLog.Out("Request server mods");
             currentLoading?.StopDownloading();
 
             UnloadServerMods();
@@ -42,7 +43,7 @@ namespace MVirus.Client
             await currentLoading.DownloadServerFilesAsync();
             if (currentLoading.State != LoadingState.COMPLECTED)
             {
-                Log.Warning("[MVirus] Server files are not downloaded. Disconnect");
+                MVLog.Warning("Server files are not downloaded. Disconnect");
                 ConnectionManager.Instance.Disconnect();
                 return;
             }

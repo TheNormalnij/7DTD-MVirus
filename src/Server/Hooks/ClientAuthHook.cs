@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
-using MVirus.Shared.Config;
-using MVirus.Shared.NetPackets;
+using MVirus.Config;
+using MVirus.NetPackets;
 
 namespace MVirus.Server.Hooks
 {

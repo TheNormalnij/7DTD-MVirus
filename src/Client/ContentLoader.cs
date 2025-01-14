@@ -2,9 +2,11 @@
 using System;
 using System.Threading.Tasks;
 using MVirus.Client.Transports;
-using MVirus.Shared;
 using System.IO;
 using System.Collections.Generic;
+using MVirus.Data;
+using MVirus.Logger;
+using MVirus.ModInfo;
 
 namespace MVirus.Client
 {

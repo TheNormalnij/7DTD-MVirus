@@ -1,11 +1,9 @@
-﻿
-using MVirus.Shared.NetStreams;
-using MVirus.Shared;
-using System.IO;
-using System.IO.Compression;
-using MVirus.Shared.Compression;
+﻿using System.IO;
+using MVirus.Data;
+using MVirus.Data.Compression;
+using MVirus.NetStreams;
 
-namespace MVirus.Server.NetStreams
+namespace MVirus.Server.NetStreams.StreamSource
 {
     public class FileStreamActiveCompressed : IStreamSource
     {

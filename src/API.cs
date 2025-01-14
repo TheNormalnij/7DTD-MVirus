@@ -1,8 +1,8 @@
 ﻿
 using HarmonyLib;
 using MVirus.Client.NetStreams;
+using MVirus.Config;
 using MVirus.Server;
-using MVirus.Shared.Config;
 
 namespace MVirus
 {

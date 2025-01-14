@@ -1,10 +1,9 @@
-﻿
-using MVirus.Shared;
-using MVirus.Shared.NetPackets;
-using MVirus.Shared.NetStreams;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MVirus.Logger;
+using MVirus.NetPackets;
+using MVirus.NetStreams;
 
 namespace MVirus.Client.NetStreams
 {
