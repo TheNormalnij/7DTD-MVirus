@@ -1,11 +1,14 @@
 ﻿using MVirus.Server.NetStreams;
 using MVirus.Shared.NetPackets;
+using System;
 using System.Threading.Tasks;
+using UniLinq;
 
 namespace MVirus.Server
 {
     public class OutcomingNetStreamHandler
     {
+        private const int RELIABLE_BUFFER_LIMIT = 500 * 1024;
         private long sendedCount = 0;
         private long windowSize = 1024 * 1024 * 20;
 
@@ -36,16 +39,15 @@ namespace MVirus.Server
 
         public async Task Update()
         {
-            var connection = client.netConnection[0] as NetConnectionSimple;
-
-            // This check produces a race condition.
-            if (windowSize > 512 && !finished && connection.reliableBufsToSend.Count < 20)
+            while (windowSize > 512 && !finished)
                 await SendDataToClient();
         }
 
         private async Task<int> SendDataToClient()
         {
-            int maxReadLen = (int)System.Math.Min(buffer.Length, windowSize);
+            // Small race condition here
+            var allowedToWrite = GetAllowedSizeToWrite();
+            int maxReadLen = Math.Min((int)Math.Min(buffer.Length, windowSize), allowedToWrite);
             var readedCount = await req.stream.ReadAsync(buffer, 0, maxReadLen);
             if (readedCount == 0)
             {
@@ -60,6 +62,17 @@ namespace MVirus.Server
             client.SendPackage(packet);
 
             return readedCount;
+        }
+
+        private int GetAllowedSizeToWrite()
+        {
+            var connection = client.netConnection[0] as NetConnectionSimple;
+
+            int size = 0;
+            foreach (var buf in connection.reliableBufsToSend.ToArray())
+                size += buf.Count;
+
+            return RELIABLE_BUFFER_LIMIT - size;
         }
     }
 }
