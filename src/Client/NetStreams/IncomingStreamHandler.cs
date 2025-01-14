@@ -10,7 +10,7 @@ namespace MVirus.Client.NetStreams
 {
     public class IncomingStreamHandler
     {
-        private const int STREAM_CREATE_OPEN_INTERVAL_MS = 5000;
+        private const int STREAM_CREATE_OPEN_INTERVAL_MS = 15000;
         private bool streamsSynced = false;
         private readonly StreamPool streamPool = new StreamPool();
 
