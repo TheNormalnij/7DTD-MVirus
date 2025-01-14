@@ -6,6 +6,7 @@ using MVirus.Shared.NetPackets;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
 
 namespace MVirus.Server
 {
@@ -57,7 +58,7 @@ namespace MVirus.Server
 
         public void HandleStreamError(ClientInfo sender, byte clientRequestId, StreamErrorCode code)
         {
-            MVLog.Error("Client sends stream error: " + code.ToString());
+            MVLog.Error($"Client sends stream {clientRequestId} error: {code}");
             CloseClientStream(sender, clientRequestId, false);
         }
 
@@ -92,17 +93,26 @@ namespace MVirus.Server
             client.SendPackage(req);
         }
 
+        private void SendStreamClosed(ClientInfo client, byte streamId, bool finished)
+        {
+            var req = NetPackageManager.GetPackage<NetPackageMVirusStreamClosed>().Setup(streamId, finished);
+            client.SendPackage(req);
+        }
+
         private void CloseClientStream(ClientInfo client, byte streamId, bool sendMessage = true)
         {
             MVLog.Debug($"Close stream {streamId}");
 
             var stream = activeRequest.GetClientStream(client, streamId);
+            if (stream == null)
+            {
+                MVLog.Debug($"Cannot close stream {streamId}. It's null");
+                return;
+            }
+
             stream.Close();
             if (sendMessage)
-            {
-                var req = NetPackageManager.GetPackage<NetPackageMVirusStreamClosed>().Setup(streamId, stream.finished);
-                client.SendPackage(req);
-            }
+                SendStreamClosed(client, streamId, stream.finished);
 
             activeRequest.Remove(client, stream);
         }
