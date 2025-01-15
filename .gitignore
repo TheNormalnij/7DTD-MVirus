@@ -2,4 +2,5 @@ src/bin/
 out/
 src/obj/
 .vs/
+.idea/
 src/MVirus.csproj.user
