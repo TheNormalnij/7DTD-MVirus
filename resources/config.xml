@@ -13,8 +13,11 @@
 	-->
 	<property name="FileTransferType" value="2"/>
 
-	<!-- Address to external HTTP file server or CDN if you are using it -->
-	<property name="ExternalHTTPServerAddr" value="https://example.com/optionalpath"/>
+	<!-- Address to external HTTP file server or CDN if you are using it.
+	     The link should return files from the HttpServerFiles folder.
+	     Request example: https://example.com/optional/sub/path/TN_MyVehicleMod/Resources/vehicle.unity3d
+	-->
+	<property name="ExternalHTTPServerAddr" value="https://example.com/optional/sub/path"/>
 
 	<!-- Port for internal HTTP file server -->
 	<property name="HttpPort" value="24000"/>
