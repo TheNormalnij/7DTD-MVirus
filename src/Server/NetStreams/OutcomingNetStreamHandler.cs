@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MVirus.NetPackets;
 using MVirus.Server.NetStreams.StreamSource;
 using UniLinq;
+using Enumerable = System.Linq.Enumerable;
 
 namespace MVirus.Server.NetStreams
 {
@@ -68,9 +69,7 @@ namespace MVirus.Server.NetStreams
         {
             var connection = client.netConnection[0] as NetConnectionSimple;
 
-            int size = 0;
-            foreach (var buf in connection.reliableBufsToSend.ToArray())
-                size += buf.Count;
+            var size = Enumerable.Sum(connection.reliableBufsToSend.ToArray(), buf => buf.Count);
 
             return RELIABLE_BUFFER_LIMIT - size;
         }

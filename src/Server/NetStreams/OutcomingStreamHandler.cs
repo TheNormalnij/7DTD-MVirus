@@ -70,7 +70,7 @@ namespace MVirus.Server.NetStreams
             }
         }
 
-        public void CloseAllClientStreams(ClientInfo client)
+        private void CloseAllClientStreams(ClientInfo client)
         {
             foreach (var handler in activeRequest.GetStreams(client))
                 handler.Close();
