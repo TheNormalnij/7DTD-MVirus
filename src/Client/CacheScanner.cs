@@ -11,7 +11,7 @@ namespace MVirus.Client
 {
     public class CacheScanner
     {
-        public async static Task<List<ServerFileInfo>> FilterLocalFiles(List<ServerFileInfo> files,
+        public static async Task<List<ServerFileInfo>> FilterLocalFiles(List<ServerFileInfo> files,
             string cachePath, CancellationToken cancellationToken, Action<ServerFileInfo> exists)
         {
             if (files.Count == 0)

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MVirus.Data.Streams
 {
@@ -32,6 +34,13 @@ namespace MVirus.Data.Streams
         public override int Read(byte[] buffer, int offset, int count)
         {
             var size = stream.Read(buffer, offset, count);
+            progress.Invoke(size);
+            return size;
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            var size = await stream.ReadAsync(buffer, offset, count, cancellationToken);
             progress.Invoke(size);
             return size;
         }

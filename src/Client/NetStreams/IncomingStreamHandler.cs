@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MVirus.Logger;
 using MVirus.NetPackets;
@@ -17,19 +19,31 @@ namespace MVirus.Client.NetStreams
         /// Creates a stream with the server
         /// </summary>
         /// <param name="path"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<IncomingNetStream> CreateFileStream(string path)
+        public Task<IncomingNetStream> CreateFileStream(string path, CancellationToken cancellationToken)
         {
-
             var taskSource = new TaskCompletionSource<IncomingNetStream>();
 
-            var streamId = streamPool.Add(new NetStreamRequest
+            var req = new NetStreamRequest
             {
                 stream = null,
                 status = StreamStatus.CREATING,
                 creatingTask = taskSource,
                 lastUpdateTick = Environment.TickCount,
                 path = path,
+            };
+
+            var streamId = streamPool.Add(req);
+
+            req.cancellationRegistration = cancellationToken.Register(() =>
+            {
+                if (taskSource.Task.IsCompleted)
+                    return;
+
+                MVLog.Debug($"Stream request is canceled {streamId}");
+                taskSource.SetCanceled();
+                streamPool.Remove(streamId);
             });
 
             SendStreamRequest(path, streamId);
@@ -59,7 +73,7 @@ namespace MVirus.Client.NetStreams
 
         public void HandleStreamOpen(byte streamId, long streamSize, bool compressed)
         {
-            MVLog.Debug($"Stream oppened: {streamId} compressed {compressed}" );
+            MVLog.Debug($"Stream opened: {streamId} compressed {compressed}" );
             var request = streamPool.Get(streamId);
             if (request == null)
             {
@@ -70,16 +84,23 @@ namespace MVirus.Client.NetStreams
 
             if (request.status != StreamStatus.CREATING)
             {
-                MVLog.Debug($"Invalid state {streamId}");
+                MVLog.Debug($"Invalid status {streamId}");
                 SendStreamError(streamId, StreamErrorCode.INVALID_STATE);
                 return;
             }
+
+            request.cancellationRegistration.Dispose();
 
             request.stream = new IncomingNetStream(
                 compressed: compressed,
                 bufferSize: (int)Math.Min(20 * 1024 * 1024, streamSize)
             );
             request.stream.SetLength(streamSize);
+            request.stream.closeCallback = stream =>
+            {
+                MVLog.Debug($"Stream closed in closeCallback {streamId}");
+                streamPool.Remove(streamId);
+            };
             request.creatingTask.SetResult(request.stream);
             request.status = StreamStatus.READING;
 
@@ -93,10 +114,7 @@ namespace MVirus.Client.NetStreams
 
             var request = streamPool.Get(streamId);
             if (request == null)
-            {
-                SendStreamError(streamId, StreamErrorCode.NOT_FOUND);
                 return;
-            }
 
             switch (request.status)
             {
@@ -123,7 +141,7 @@ namespace MVirus.Client.NetStreams
 
         public void HandleError(byte streamId, StreamErrorCode code)
         {
-            MVLog.Debug($"Stream error: {0} {1}", streamId, code.ToString());
+            MVLog.Debug($"Stream error: {streamId} {code}");
 
             var stream = streamPool.Get(streamId);
             if (stream == null)
@@ -175,7 +193,7 @@ namespace MVirus.Client.NetStreams
                     {
                         streamId = req.streamId,
                         readedCount = req.stream.SendedCount,
-                        bufferSize = req.stream.BufferAvialableSize,
+                        bufferSize = req.stream.BufferAvailableSize,
                     });
                 }
             });
@@ -183,7 +201,7 @@ namespace MVirus.Client.NetStreams
             if (syncData.Count == 0)
                 return;
 
-            MVLog.Debug("Send sync");
+            MVLog.Debug("Send sync for " + syncData.Select(item => item.streamId).Join());
 
             var request = NetPackageManager.GetPackage<NetPackageMVirusStreamSync>().Setup(syncData);
             SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(request, true);

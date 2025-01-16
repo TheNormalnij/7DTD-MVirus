@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace MVirus.Client.NetStreams
 {
@@ -16,5 +17,6 @@ namespace MVirus.Client.NetStreams
         public int lastUpdateTick;
         public string path;
         public byte streamId;
+        public CancellationTokenRegistration cancellationRegistration;
     }
 }

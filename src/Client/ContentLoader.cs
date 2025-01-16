@@ -91,7 +91,8 @@ namespace MVirus.Client
 
             await DoDownloadLoop();
 
-            MVLog.Out("All download tasks complected");
+            if (State != LoadingState.CANCELED)
+                MVLog.Out("All download tasks complected");
 
             State = LoadingState.COMPLECTED;
         }
@@ -157,7 +158,7 @@ namespace MVirus.Client
             PathUtils.CreatePathForDir(Path.Combine(outPath, Path.GetDirectoryName(fileInfo.Path)));
             MVLog.Out("Download file: " + fileInfo.Path);
             await transport.DownloadFileAsync(fileInfo, outPath, cancellationTokenSource.Token, ProgressCounter);
-            MVLog.Out("Download complecte: " + fileInfo.Path);
+            MVLog.Out("Download complete: " + fileInfo.Path);
         }
 
         private void ProgressCounter(int count)

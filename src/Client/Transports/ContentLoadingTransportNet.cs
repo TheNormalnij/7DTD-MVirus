@@ -21,14 +21,14 @@ namespace MVirus.Client.Transports
             IncomingNetStream netStream = null;
             try
             {
-                netStream = await API.incomingStreamHandler.CreateFileStream(fileInfo.Path);
+                netStream = await API.incomingStreamHandler.CreateFileStream(fileInfo.Path, cancellationToken);
 
                 fileStream = File.Open(Path.Combine(outPath, fileInfo.Path), FileMode.Create);
 
                 if (netStream.GzipCompressed)
                 {
                     await StreamCopyUtils.CopyGzipStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
-                                                                        progressCounter);
+                        progressCounter);
 
                     // Server returns full file size when active compression is used.
                     if (netStream.TotalCount < fileInfo.Size)
@@ -36,7 +36,7 @@ namespace MVirus.Client.Transports
                 }
                 else
                     await StreamCopyUtils.CopyStreamToAsyncWithProgress(netStream, fileStream, cancellationToken,
-                                                                    progressCounter);
+                        progressCounter);
             }
             finally
             {

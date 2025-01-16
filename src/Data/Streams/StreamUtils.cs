@@ -9,16 +9,22 @@ namespace MVirus.Data.Streams
 {
     internal class StreamCopyUtils
     {
-        public static async Task CopyStreamToAsyncWithProgress(Stream from, Stream destination, CancellationToken cancellationToken, Action<int> progress, int bufferSize = 81920)
+        public static Task CopyStreamToAsyncWithProgress(Stream from, Stream destination, CancellationToken cancellationToken, Action<int> progress, int bufferSize = 81920)
         {
-            await new StreamProgressWrapper(from, progress).CopyToAsync(destination, bufferSize);
+            return new StreamProgressWrapper(from, progress).CopyToAsync(destination, bufferSize, cancellationToken);
         }
 
         public static async Task CopyGzipStreamToAsyncWithProgress(Stream from, Stream destination, CancellationToken cancellationToken, Action<int> progress, int bufferSize = 81920)
         {;
             var gzipStream = new GZipStream(new StreamProgressWrapper(from, progress), CompressionMode.Decompress);
-            await gzipStream.CopyToAsync(destination, bufferSize);
-            gzipStream.Dispose();
+            try
+            {
+                await gzipStream.CopyToAsync(destination, bufferSize, cancellationToken);
+            }
+            finally
+            {
+                gzipStream.Dispose();
+            }
         }
 
     }

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MVirus.Logger;
 
 namespace MVirus.Client.NetStreams
 {
@@ -11,13 +12,14 @@ namespace MVirus.Client.NetStreams
         public override bool CanSeek => false;
         public override bool CanWrite => false;
         public override long Length => TotalCount;
-        public override long Position { get => readedCount; set => throw new NotImplementedException(); }
+        public override long Position { get => readCount; set => throw new NotImplementedException(); }
 
         public bool GzipCompressed { get; private set; } = false;
-        public int BufferAvialableSize => buffer.FreeSize;
+        public int BufferAvailableSize => buffer.FreeSize;
         public long SendedCount { get; private set; } = 0;
         public long TotalCount { get; private set; } = -1;
-        private long readedCount = 0;
+        private long readCount = 0;
+        public Action<IncomingNetStream> closeCallback;
 
         private readonly object dataLock = new object();
 
@@ -47,13 +49,13 @@ namespace MVirus.Client.NetStreams
             if (currentReading != null)
                 throw new Exception("Reading in progress");
 
-            if (readedCount == TotalCount)
+            if (readCount == TotalCount)
                 return Task.FromResult(0);
 
-            if (exception != null && (TotalCount == -1 || readedCount == TotalCount))
+            if (exception != null && (TotalCount == -1 || readCount == TotalCount))
                 return Task.FromException<int>(exception);
 
-            var newReqding = new StreamReading
+            var newReading = new StreamReading
             {
                 destination = buffer,
                 offset = offset,
@@ -61,16 +63,18 @@ namespace MVirus.Client.NetStreams
                 taskSource = new TaskCompletionSource<int>(),
             };
 
-            cancellationToken.Register(DoCancellation);
-
-            currentReading = newReqding;
-
             lock (dataLock)
             {
+                currentReading = newReading;
+                newReading.cancellationRegistration = cancellationToken.Register(DoCancellation);
+
+                if (exception != null)
+                    return Task.FromException<int>(exception);
+
                 DoReading();
             }
 
-            return newReqding.taskSource.Task;
+            return newReading.taskSource.Task;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -107,6 +111,8 @@ namespace MVirus.Client.NetStreams
             if (reading == null || reading.taskSource.Task.IsCompleted)
                 return;
 
+            reading.cancellationRegistration.Dispose();
+
             currentReading = null;
 
             var transferBytes = Math.Min(reading.count, buffer.Count);
@@ -117,7 +123,9 @@ namespace MVirus.Client.NetStreams
 
             reading.taskSource.SetResult(transferBytes);
 
-            readedCount += transferBytes;
+            readCount += transferBytes;
+
+            MVLog.Debug($"ReadAsync finished task");
         }
 
         private void DoCancellation()
@@ -127,13 +135,17 @@ namespace MVirus.Client.NetStreams
 
         public void SetException(Exception ex)
         {
-            exception = ex;
+            lock (dataLock)
+            {
+                exception = ex;
 
-            if (currentReading == null || currentReading.taskSource.Task.IsCompleted)
-                return;
+                if (currentReading == null || currentReading.taskSource.Task.IsCompleted)
+                    return;
 
-            currentReading.taskSource.SetException(ex);
-            currentReading = null;
+                currentReading.taskSource.SetException(ex);
+                currentReading.cancellationRegistration.Dispose();
+                currentReading = null;
+            }
         }
 
         public bool IsAllDataRecieved()
@@ -150,11 +162,17 @@ namespace MVirus.Client.NetStreams
                 if (reading == null || reading.taskSource.Task.IsCompleted)
                     return;
 
-                if (readedCount != TotalCount)
+                if (readCount != TotalCount)
                     return;
 
                 reading.taskSource.SetResult(0);
             }
+        }
+
+        public override void Close()
+        {
+            closeCallback?.Invoke(this);
+            base.Close();
         }
     }
 
@@ -163,5 +181,6 @@ namespace MVirus.Client.NetStreams
         public int offset;
         public int count;
         public TaskCompletionSource<int> taskSource;
+        public CancellationTokenRegistration cancellationRegistration;
     }
 }
