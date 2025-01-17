@@ -10,8 +10,14 @@ jobs:
       - uses: actions/cache@v4
         id: cache-game-libs
         with:
-          path: 'C:/Program Files (x86)/Steam/steamapps/common/7 Days to Die Dedicated Server/7DaysToDieServer_Data/Managed'
+          path: 'C:/7dtd/7DaysToDieServer_Data/Managed'
           key: cache-1_2-b27
+
+      - uses: actions/cache@v4
+        id: cache-harmony
+        with:
+          path: 'C:/7dtd/Mods/0_TFP_Harmony/'
+          key: cache-harmony-0
 
       - name: Setup steamcmd
         if: steps.cache-game-libs.outputs.cache-hit != 'true'
@@ -19,13 +25,18 @@ jobs:
 
       - name: Update 7DTD
         if: steps.cache-game-libs.outputs.cache-hit != 'true'
-        run: steamcmd +login anonymous +app_update 294420 +quit
+        run: steamcmd +login anonymous +force_install_dir "C:/7dtd" +app_update 294420 +quit
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+
+      - name: Setup solution
+        run: |
+          (Get-Content -path src/MVirus.csproj) -replace '..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\7 Days To Die', 'C:/7dtd' | Set-Content -path src/MVirus.csproj
+        shell: pwsh
 
       - name: Build with MSBuild
         run: msbuild MVirus.sln /p:Configuration=Release
