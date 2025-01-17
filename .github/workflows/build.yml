@@ -19,13 +19,13 @@ jobs:
           path: 'C:/7dtd/Mods/0_TFP_Harmony/'
           key: cache-harmony-0
 
-#      - name: Setup steamcmd
-#        if: steps.cache-game-libs.outputs.cache-hit != 'true'
-#        uses: CyberAndrii/setup-steamcmd@v1.2.0
+      - name: Setup steamcmd
+        if: steps.cache-game-libs.outputs.cache-hit != 'true'
+        uses: CyberAndrii/setup-steamcmd@v1.2.0
 
-#      - name: Update 7DTD
-#        if: steps.cache-game-libs.outputs.cache-hit != 'true'
-#        run: steamcmd +login anonymous +force_install_dir "C:/7dtd" +app_update 294420 +quit
+      - name: Update 7DTD
+        if: steps.cache-game-libs.outputs.cache-hit != 'true'
+        run: steamcmd +login anonymous +force_install_dir "C:/7dtd" +app_update 294420 +quit
 
       - name: Checkout repository
         uses: actions/checkout@v4
