@@ -1,0 +1,41 @@
+name: Build
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.8.0
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Download and copy files from Docker container
+        run: |
+          docker pull vinanrra/7dtd-server
+          docker create --name temp-container --entrypoint /bin/sh vinanrra/7dtd-server
+          docker cp temp-container:/home/sdtdserver/7DaysToDieServer_Data/Managed/. ./linkedLibs
+          docker rm temp-container
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build with MSBuild
+        run: msbuild MVirus.sln /p:Configuration=Release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MVirus
+          path: ./out/TN_MVirus
