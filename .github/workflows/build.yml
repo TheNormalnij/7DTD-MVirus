@@ -7,26 +7,22 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - uses: actions/cache@v4
+        id: cache-game-libs
+        with:
+          path: "C:\Program Files (x86)\Steam\steamapps\common\7 Days to Die Dedicated Server\7DaysToDieServer_Data\Managed"
+          key: cache-1_2-b27
+
+      - name: Setup steamcmd
+        if: steps.cache-game-libs.outputs.cache-hit != 'true'
+        uses: CyberAndrii/setup-steamcmd@v1.2.0
+
+      - name: Update 7DTD
+        if: steps.cache-game-libs.outputs.cache-hit != 'true'
+        run: steamcmd +login anonymous +app_update 294420 +quit
+
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.8.0
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-docker-
-
-      - name: Download and copy files from Docker container
-        run: |
-          docker pull vinanrra/7dtd-server
-          docker create --name temp-container --entrypoint /bin/sh vinanrra/7dtd-server
-          docker cp temp-container:/home/sdtdserver/7DaysToDieServer_Data/Managed/. ./linkedLibs
-          docker rm temp-container
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
