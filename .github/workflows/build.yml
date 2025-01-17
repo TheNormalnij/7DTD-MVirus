@@ -10,7 +10,7 @@ jobs:
       - uses: actions/cache@v4
         id: cache-game-libs
         with:
-          path: "C:\Program Files (x86)\Steam\steamapps\common\7 Days to Die Dedicated Server\7DaysToDieServer_Data\Managed"
+          path: 'C:/Program Files (x86)/Steam/steamapps/common/7 Days to Die Dedicated Server/7DaysToDieServer_Data/Managed'
           key: cache-1_2-b27
 
       - name: Setup steamcmd
