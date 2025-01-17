@@ -36,6 +36,7 @@ jobs:
       - name: Setup solution
         run: |
           (Get-Content -path src/MVirus.csproj) -replace '\.\.\\\.\.\\\.\.\\\.\.\\\.\.\\Program Files \(x86\)\\Steam\\steamapps\\common\\7 Days To Die', 'C:/7dtd' | Set-Content -path src/MVirus.csproj
+          (Get-Content -path src/MVirus.csproj) -replace '7DaysToDie_Data', '7DaysToDieServer_Data' | Set-Content -path src/MVirus.csproj
         shell: pwsh
 
       - name: Build with MSBuild
