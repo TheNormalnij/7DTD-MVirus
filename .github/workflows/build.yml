@@ -1,0 +1,49 @@
+name: Build
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/cache@v4
+        id: cache-game-libs
+        with:
+          path: 'C:/7dtd/7DaysToDieServer_Data/Managed'
+          key: cache-1_2-b27
+
+      - uses: actions/cache@v4
+        id: cache-harmony
+        with:
+          path: 'C:/7dtd/Mods/0_TFP_Harmony/'
+          key: cache-harmony-0
+
+      - name: Setup steamcmd
+        if: steps.cache-game-libs.outputs.cache-hit != 'true'
+        uses: CyberAndrii/setup-steamcmd@v1.2.0
+
+      - name: Update 7DTD
+        if: steps.cache-game-libs.outputs.cache-hit != 'true'
+        run: steamcmd +force_install_dir "C:/7dtd" +login anonymous +app_update 294420 +quit
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup solution
+        run: |
+          (Get-Content -path src/MVirus.csproj) -replace '\.\.\\\.\.\\\.\.\\\.\.\\\.\.\\Program Files \(x86\)\\Steam\\steamapps\\common\\7 Days To Die', 'C:/7dtd' | Set-Content -path src/MVirus.csproj
+          (Get-Content -path src/MVirus.csproj) -replace '7DaysToDie_Data', '7DaysToDieServer_Data' | Set-Content -path src/MVirus.csproj
+        shell: pwsh
+
+      - name: Build with MSBuild
+        run: msbuild MVirus.sln /p:Configuration=Release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MVirus
+          path: ./out/
