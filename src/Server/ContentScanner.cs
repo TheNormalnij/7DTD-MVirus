@@ -10,14 +10,6 @@ namespace MVirus.Server
 {
     internal class ContentScanner
     {
-        private static HashSet<string> ignoredMods = new HashSet<string> {
-            "MVirus",
-            "TFP_Harmony",
-            "TFP_CommandExtensions",
-            "TFP_MapRendering",
-            "TFP_WebServer",
-        };
-
         public static readonly List<ServerModInfo> loadedMods = new List<ServerModInfo>();
         public static string cachePath;
 
@@ -31,7 +23,10 @@ namespace MVirus.Server
 
             foreach (var mod in ModManager.GetLoadedMods())
             {
-                if (ignoredMods.Contains(mod.Name))
+                if (mod == thisMod)
+                    continue;
+
+                if (MVirusConfig.IgnoredMods.Contains(mod.Name))
                     continue;
 
                 var modDirectoryName = Path.GetFileName(mod.Path);

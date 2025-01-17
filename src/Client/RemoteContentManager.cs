@@ -28,7 +28,7 @@ namespace MVirus.Client
             ParseRemoteMods(remoteInfo);
 
             var filesToDownload = GetAllRemoteModsFiles(remoteInfo);
-            currentLoading = new ContentLoader(filesToDownload, MVirusConfig.clientCachePath, activeTransport);
+            currentLoading = new ContentLoader(filesToDownload, MVirusConfig.ClientCachePath, activeTransport);
             _ = Process();
         }
 

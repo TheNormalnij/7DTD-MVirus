@@ -31,7 +31,7 @@ namespace MVirus.Client
         private readonly List<LoadedAtlasInfo> atlases;
         private readonly List<string> atlasManagers;
 
-        public string Path => MVirusConfig.clientCachePath + "/" + dirName;
+        public string Path => MVirusConfig.ClientCachePath + "/" + dirName;
 
         public RemoteModLoadState State { get; private set; }
 

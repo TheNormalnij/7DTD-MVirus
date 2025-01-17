@@ -35,4 +35,14 @@
 		 Doubles disk usage, but allows edit mods at runtime
 	-->
 	<property name="CacheAllRemoteFiles" value="false"/>
+
+
+    <!-- Mod parameters.
+         Use names from ModInfo.xml here
+     -->
+    <mod name="TFP_Harmony" share="false" />
+    <mod name="TFP_CommandExtensions" share="false" />
+    <mod name="TFP_MapRendering" share="false" />
+    <mod name="TFP_WebServer" share="false" />
+
 </MVirusSettings>

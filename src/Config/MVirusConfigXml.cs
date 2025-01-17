@@ -60,6 +60,15 @@ namespace MVirus.Config
                         }
                 }
             }
+
+            foreach (XElement item in root.Elements("mod"))
+            {
+                var name = item.GetAttribute("name");
+                var share = item.GetAttribute("share") == "true";
+
+                if (!string.IsNullOrEmpty(name) && !share)
+                    MVirusConfig.IgnoredMods.Add(name);
+            }
         }
     }
 }
