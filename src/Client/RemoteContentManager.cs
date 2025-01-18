@@ -1,5 +1,7 @@
 ﻿using MVirus.Client.Transports;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MVirus.Config;
 using MVirus.Logger;
@@ -13,6 +15,7 @@ namespace MVirus.Client
         private static readonly SearchPathRemoteMods prefabsSearch = new SearchPathRemoteMods("Prefabs");
         private static readonly SearchPathRemoteMods prefabsImposterSearch = new SearchPathRemoteMods("Prefabs");
         private static ILoadingTransport activeTransport;
+        private static bool isLoading;
 
         public static readonly Dictionary<string, RemoteMod> remoteMods = new Dictionary<string, RemoteMod>();
 
@@ -22,24 +25,32 @@ namespace MVirus.Client
         {
             MVLog.Out("Request server mods");
             currentLoading?.StopDownloading();
+            isLoading = true;
 
             UnloadServerMods();
 
-            ParseRemoteMods(remoteInfo);
-
-            var filesToDownload = GetAllRemoteModsFiles(remoteInfo);
-            currentLoading = new ContentLoader(filesToDownload, MVirusConfig.ClientCachePath, activeTransport);
-            _ = Process();
+            _ = Process(remoteInfo);
         }
 
         public static void CancelLoadingProcess()
         {
             currentLoading?.StopDownloading();
             currentLoading = null;
+            isLoading = false;
         }
 
-        private static async Task Process()
+        private static async Task Process(ServerModInfo[] remoteInfo)
         {
+            await ParseRemoteMods(remoteInfo);
+
+            var filesToDownload = GetAllRemoteModsFiles();
+            currentLoading = new ContentLoader(filesToDownload, MVirusConfig.ClientCachePath, activeTransport);
+            if (!isLoading)
+            {
+                MVLog.Out("Canceled loading remote mods");
+                return;
+            }
+
             await currentLoading.DownloadServerFilesAsync();
             if (currentLoading.State != LoadingState.COMPLECTED)
             {
@@ -69,10 +80,24 @@ namespace MVirus.Client
             prefabsImposterSearch.InvalidateCache();
         }
 
-        private static void ParseRemoteMods(ServerModInfo[] list)
+        private static async Task ParseRemoteMods(ServerModInfo[] list)
         {
             foreach (var remoteMod in list)
-                remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod));
+                if (!await HasLocalMod(remoteMod))
+                    remoteMods.Add(remoteMod.Name, new RemoteMod(remoteMod));
+        }
+
+        private static async Task<bool> HasLocalMod(ServerModInfo modInfo)
+        {
+            var localMod = ModManager.GetMod(modInfo.Name);
+            if (localMod == null)
+                return false;
+
+            var count = modInfo.Files.Length;
+
+            await CacheScanner.FilterLocalFiles(modInfo.Files.ToList(), localMod.Path, CancellationToken.None, file => count--);
+
+            return count == 0;
         }
 
         /// <summary>
@@ -86,7 +111,7 @@ namespace MVirus.Client
         }
 
         /// <summary>
-        /// Create request for interenal net transport
+        /// Create request for internal net transport
         /// </summary>
         public static void RequestContent()
         {
@@ -108,10 +133,10 @@ namespace MVirus.Client
             PathAbstractions.PrefabImpostersSearchPaths.paths.Remove(prefabsImposterSearch);
         }
 
-        private static DownloadFileQuery GetAllRemoteModsFiles(ServerModInfo[] remoteInfo)
+        private static DownloadFileQuery GetAllRemoteModsFiles()
         {
             var list = new List<ServerFileInfo>();
-            foreach (var remoteMod in remoteInfo)
+            foreach (var remoteMod in remoteMods.Values)
             {
                 foreach (var file in remoteMod.Files)
                     list.Add(new ServerFileInfo(remoteMod.DirName + "/" + file.Path, file.Size, file.Crc));
@@ -119,7 +144,7 @@ namespace MVirus.Client
             return new DownloadFileQuery(list);
         }
 
-        public static void LoadResources()
+        private static void LoadResources()
         {
             foreach (var mod in remoteMods.Values)
                 mod.Load();

@@ -24,30 +24,30 @@ namespace MVirus.Client
 
     class RemoteMod
     {
-        public readonly string name;
-        public readonly string dirName;
-        private readonly ServerFileInfo[] files;
+        public readonly string Name;
+        public readonly string DirName;
+        public readonly ServerFileInfo[] Files;
 
         private readonly List<LoadedAtlasInfo> atlases;
         private readonly List<string> atlasManagers;
 
-        public string Path => MVirusConfig.ClientCachePath + "/" + dirName;
+        public string Path => MVirusConfig.ClientCachePath + "/" + DirName;
 
         public RemoteModLoadState State { get; private set; }
 
         public RemoteMod(ServerModInfo remoteMod)
         {
             State = RemoteModLoadState.Stopped;
-            name = remoteMod.Name;
-            dirName = remoteMod.DirName;
-            files = remoteMod.Files;
+            Name = remoteMod.Name;
+            DirName = remoteMod.DirName;
+            Files = remoteMod.Files;
             atlases = new List<LoadedAtlasInfo>();
             atlasManagers = new List<string>();
         }
 
         public void Load()
         {
-            MVLog.Out("Load server mode: " + name);
+            MVLog.Out("Load server mode: " + Name);
             State = RemoteModLoadState.Starting;
 
             try
@@ -65,7 +65,7 @@ namespace MVirus.Client
 
         public void Unload()
         {
-            MVLog.Out("Unload server mod: " + name);
+            MVLog.Out("Unload server mod: " + Name);
             State = RemoteModLoadState.Unloading;
             try
             {
@@ -84,7 +84,7 @@ namespace MVirus.Client
         {
             var atlases = new HashSetList<string>();
 
-            foreach (var file in files)
+            foreach (var file in Files)
             {
                 if (file.Path.StartsWith("UIAtlases/"))
                 {
@@ -101,7 +101,7 @@ namespace MVirus.Client
             {
                 if (!ModManager.atlasManagers.TryGetValue(dirName, out var ame))
                 {
-                    MVLog.Out("Creating new atlas '" + dirName + "' for mod '" + name + "'");
+                    MVLog.Out("Creating new atlas '" + dirName + "' for mod '" + Name + "'");
                     ModManager.RegisterAtlasManager(MultiSourceAtlasManager.Create(ModManager.atlasesParentGo, dirName), _createdByMod: true, ModManager.defaultShader);
                     ame = ModManager.atlasManagers[dirName];
 

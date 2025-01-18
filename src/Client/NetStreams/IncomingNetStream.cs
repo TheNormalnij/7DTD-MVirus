@@ -124,8 +124,6 @@ namespace MVirus.Client.NetStreams
             reading.taskSource.SetResult(transferBytes);
 
             readCount += transferBytes;
-
-            MVLog.Debug($"ReadAsync finished task");
         }
 
         private void DoCancellation()
