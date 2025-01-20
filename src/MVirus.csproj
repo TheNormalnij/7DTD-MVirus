@@ -33,6 +33,7 @@
   <ItemGroup>
     <Compile Include="API.cs" />
     <Compile Include="Client\CacheScanner.cs" />
+    <Compile Include="Client\Hooks\NetPackageManagerIdMappingsReceived.cs" />
     <Compile Include="Client\NetStreams\IncomingNetStream.cs" />
     <Compile Include="Client\NetStreams\IncomingStreamHandler.cs" />
     <Compile Include="Client\NetStreams\NetStreamRequest.cs" />
@@ -47,6 +48,7 @@
     <Compile Include="Data\Streams\StreamProgressWrapper.cs" />
     <Compile Include="Data\Streams\StreamUtils.cs" />
     <Compile Include="Logger\MVLog.cs" />
+    <Compile Include="NetPackets\NetPackageMVirusDummy.cs" />
     <Compile Include="NetPackets\NetPackageMVirusHello.cs" />
     <Compile Include="NetPackets\NetPackageMVirusHelloResponse.cs" />
     <Compile Include="NetPackets\NetPackageMVirusStreamClosed.cs" />
