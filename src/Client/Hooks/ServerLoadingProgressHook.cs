@@ -34,8 +34,10 @@ namespace MVirus.Client.Hooks
 
             XUiC_ProgressWindow.SetText(LocalPlayerUI.primaryUI, "Wait server mod list" + cancelText);
 
+            var cancelledManually = false;
             XUiC_ProgressWindow.SetEscDelegate(LocalPlayerUI.primaryUI, () =>
             {
+                cancelledManually = true;
                 RemoteContentManager.CancelLoadingProcess();
                 ConnectionManager.Instance.Disconnect();
                 RemoteContentManager.UnloadServerMods();
@@ -91,6 +93,14 @@ namespace MVirus.Client.Hooks
             {
                 ConnectionManager.Instance.Disconnect();
                 RemoteContentManager.UnloadServerMods();
+
+                if (!cancelledManually)
+                {
+                    ((XUiC_MessageBoxWindowGroup)((XUiWindowGroup)GameManager.Instance.windowManager
+                            .GetWindow(XUiC_MessageBoxWindowGroup.ID)).Controller)
+                            .ShowMessage(Localization.Get("auth_messageTitle"), "Cannot download files. Check logs for details");
+                }
+
                 yield break;
             }
 

@@ -88,8 +88,13 @@ namespace MVirus.NetPackets
 
             if (minimalVersion > Version.ModVersion)
             {
-                MVLog.Warning("Server requests MVirus " + minimalVersion + ". Current version: " + Version.ModVersion);
+                var msg = $"Server requests MVirus {minimalVersion}. Current version: {Version.ModVersion}";
+                MVLog.Warning(msg);
                 connectionManager.Disconnect();
+
+                ((XUiC_MessageBoxWindowGroup)((XUiWindowGroup) GameManager.Instance.windowManager
+                    .GetWindow(XUiC_MessageBoxWindowGroup.ID)).Controller)
+                    .ShowMessage(Localization.Get("auth_messageTitle"), msg);
             }
 
             if (remoteFilesSource == RemoteFilesSource.GAME_CONNECTION)

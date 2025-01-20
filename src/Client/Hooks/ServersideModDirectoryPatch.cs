@@ -3,6 +3,8 @@ using System;
 
 namespace MVirus.Client.Hooks
 {
+    // The hook fixes directories to *.unity3d files for remote mods
+
     [HarmonyPatch(typeof(ModManager), nameof(ModManager.PatchModPathString))]
     internal class ServersideModDirectoryPatch
     {
