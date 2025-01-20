@@ -19,8 +19,8 @@ namespace MVirus.NetPackets
         public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;
 
         // Params
-        private uint MVirusProtocolVersion = 0;
-        private uint MVirusMinimalBuild = Version.MINIMAL_CLIENT_VERSION;
+        private System.Version serverVersion = Version.ModVersion;
+        private System.Version minimalVersion = Version.MinimalClientVersion;
         private RemoteFilesSource remoteFilesSource;
         private ushort localHttpPort;
         private string remoteHttpServer;
@@ -35,8 +35,8 @@ namespace MVirus.NetPackets
 
         public override void read(PooledBinaryReader _reader)
         {
-            MVirusProtocolVersion = _reader.ReadUInt32();
-            MVirusMinimalBuild = _reader.ReadUInt32();
+            serverVersion = System.Version.Parse(_reader.ReadString());
+            minimalVersion = System.Version.Parse(_reader.ReadString());
             remoteFilesSource = (RemoteFilesSource)_reader.ReadByte();
 
             switch (remoteFilesSource)
@@ -57,8 +57,8 @@ namespace MVirus.NetPackets
         public override void write(PooledBinaryWriter _writer)
         {
             base.write(_writer);
-            _writer.Write(MVirusProtocolVersion);
-            _writer.Write(MVirusMinimalBuild);
+            _writer.Write(serverVersion.ToString());
+            _writer.Write(minimalVersion.ToString());
             _writer.Write((byte)remoteFilesSource);
 
             switch (remoteFilesSource)
@@ -86,15 +86,9 @@ namespace MVirus.NetPackets
             if (connectionManager.IsServer)
                 return;
 
-            if (MVirusProtocolVersion != 0)
+            if (minimalVersion > Version.ModVersion)
             {
-                MVLog.Warning("Protocol version missmatch");
-                connectionManager.Disconnect();
-            }
-
-            if (MVirusMinimalBuild > Version.VERSION)
-            {
-                MVLog.Warning("Server requests MVirus " + MVirusMinimalBuild + ". Curent version: " + Version.VERSION);
+                MVLog.Warning("Server requests MVirus " + minimalVersion + ". Current version: " + Version.ModVersion);
                 connectionManager.Disconnect();
             }
 

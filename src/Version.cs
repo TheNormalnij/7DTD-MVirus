@@ -3,7 +3,7 @@ namespace MVirus
 {
     public class Version
     {
-        public static uint VERSION = 3;
-        public static uint MINIMAL_CLIENT_VERSION = 3;
+        public static System.Version ModVersion => API.instance.Version;
+        public static readonly System.Version MinimalClientVersion = System.Version.Parse("1.0.0");
     }
 }
