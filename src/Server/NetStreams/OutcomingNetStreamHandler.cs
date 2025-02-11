@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MVirus.NetPackets;
 using MVirus.Server.NetStreams.StreamSource;
+using Platform.Steam;
 using UniLinq;
 using Enumerable = System.Linq.Enumerable;
+using Steamworks;
 
 namespace MVirus.Server.NetStreams
 {
@@ -67,11 +70,31 @@ namespace MVirus.Server.NetStreams
 
         private int GetAllowedSizeToWrite()
         {
-            var connection = client.netConnection[0] as NetConnectionSimple;
+            var connection = client.netConnection[0];
 
-            var size = Enumerable.Sum(connection.reliableBufsToSend.ToArray(), buf => buf.Count);
+            switch (connection)
+            {
+                case NetConnectionSimple connectionSimple:
+                {
+                    var size = Enumerable.Sum(connectionSimple.reliableBufsToSend.ToArray(), buf => buf.Count);
+                    return RELIABLE_BUFFER_LIMIT - size;
+                }
+                case NetConnectionSteam connectionSteam:
+                {
+                    var net = connectionSteam.cInfo.network as NetworkServerSteam;
+                    if (net == null)
+                        return 0;
 
-            return RELIABLE_BUFFER_LIMIT - size;
+                    CSteamID recipient = new CSteamID(((UserIdentifierSteam) connectionSteam.cInfo.PlatformId).SteamId);
+                    var size = Enumerable.Sum(Enumerable.Where(net.sendBufs.queue, packet => packet.Recipient == recipient), packet => packet.Data.Count);
+
+                    return RELIABLE_BUFFER_LIMIT - size;
+                }
+                default:
+                {
+                    throw new PlatformNotSupportedException("Unsupported connection type");
+                }
+            }
         }
     }
 }
