@@ -11,7 +11,7 @@ namespace MVirus.Server
 {
     public class ServerModManager
     {
-        private static ContentWebServer contentServer;
+        public static ContentWebServer contentServer;
         public static OutcomingStreamHandler netTransferManager;
 
         public static void OnServerGameStarted() {

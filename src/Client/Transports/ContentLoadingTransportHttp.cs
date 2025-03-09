@@ -35,7 +35,7 @@ namespace MVirus.Client.Transports
 
                 var request = new HttpRequestMessage(HttpMethod.Get, urlPath);
 
-                var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 netStream = await response.Content.ReadAsStreamAsync();

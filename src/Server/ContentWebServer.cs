@@ -17,10 +17,8 @@ namespace MVirus.Server
         private int _port;
         private bool closing;
 
-        public int Port
-        {
-            get { return _port; }
-        }
+        public int Port => _port;
+        public HttpListener Listener => _listener;
 
         public ContentWebServer(IStreamSource streamSource, int port = 8080)
         {
@@ -41,7 +39,9 @@ namespace MVirus.Server
         {
             closing = false;
             _listener = new HttpListener();
-            _listener.Prefixes.Add("http://*:" + _port.ToString() + "/");
+            _listener.Prefixes.Add($"http://*:{_port}/");
+            _listener.Prefixes.Add($"http://[::1]:{_port}/");
+            _listener.Prefixes.Add($"http://[::]:{_port}/");
             _listener.Start();
 
             Task.Run(ListenLoopAsync);

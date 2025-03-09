@@ -62,6 +62,7 @@
     <Compile Include="NetStreams\NetStreamSyncData.cs" />
     <Compile Include="ModInfo\ServerFileInfo.cs" />
     <Compile Include="ModInfo\ServerModInfo.cs" />
+    <Compile Include="Server\Hooks\Ipv6SupportHooks.cs" />
     <Compile Include="Server\Hooks\NetPackageManagerStartServerHook.cs" />
     <Compile Include="Server\NetStreams\OutgoingStreamStore.cs" />
     <Compile Include="Server\NetStreams\StreamSource\FileStreamActiveComressed.cs" />
