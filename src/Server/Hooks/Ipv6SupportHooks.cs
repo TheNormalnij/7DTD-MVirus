@@ -27,8 +27,6 @@ namespace MVirus.Server.Hooks
 
             var asLocalHost = "mvirus-ipv6-workaround.local:" + MVirusConfig.FilesHttpPort;
             self.Headers["host"] = asLocalHost;
-
-            MVLog.Warning("Pathed host " + asLocalHost);
         }
     }
 
@@ -42,8 +40,7 @@ namespace MVirus.Server.Hooks
         {
             if (ServerModManager.contentServer == null || uri == null)
                 return;
-
-            MVLog.Warning("Pathed handler " );
+            
             try
             {
                 if (__result == null && uri.Port == ServerModManager.contentServer.Port)
