@@ -52,6 +52,9 @@ namespace MVirus.Server.NetStreams
             // Small race condition here
             var allowedToWrite = GetAllowedSizeToWrite();
             int maxReadLen = Math.Min((int)Math.Min(buffer.Length, windowSize), allowedToWrite);
+            if (maxReadLen <= 0)
+                return 0;
+
             var readedCount = await req.stream.ReadAsync(buffer, 0, maxReadLen);
             if (readedCount == 0)
             {
