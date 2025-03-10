@@ -88,8 +88,15 @@ namespace MVirus.Server.NetStreams
                     if (net == null)
                         return 0;
 
+                    int size;
                     CSteamID recipient = new CSteamID(((UserIdentifierSteam) connectionSteam.cInfo.PlatformId).SteamId);
-                    var size = Enumerable.Sum(Enumerable.Where(net.sendBufs.queue, packet => packet.Recipient == recipient), packet => packet.Data.Count);
+                    var queue = net.sendBufs.queue;
+                    lock (queue)
+                    {
+                        size = Enumerable.Sum(
+                            Enumerable.Where(net.sendBufs.queue, packet => packet.Recipient == recipient),
+                            packet => packet.Data.Count);
+                    }
 
                     return RELIABLE_BUFFER_LIMIT - size;
                 }
