@@ -31,7 +31,7 @@ The mod supports all mods that do not use client-side DLLs. This includes:
 By default, MVirus is configured to download mods only. You can customize the configuration in `config.xml` based on your needs.
 
 ## You want to download mods only
-* This option is enabled by default.
+* This configuration is used by default.
 * Set the `ShareMods` property to `false`.
 * This fixes a protocol error when a friend without MVirus tries to connect to your local server.
 
